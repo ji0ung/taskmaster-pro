@@ -2875,6 +2875,7 @@ body {
    ============================================ */
 @media (max-width: 768px) {
     .header {
+        position: relative;
         flex-wrap: wrap;
         padding: var(--spacing-sm);
         gap: var(--spacing-sm);
@@ -2882,12 +2883,14 @@ body {
 
     .header-left {
         flex: 1;
+        min-width: 100%;
     }
 
     .header-right {
+        width: 100%;
         flex-wrap: wrap;
         gap: var(--spacing-xs);
-        justify-content: flex-end;
+        justify-content: space-between;
     }
 
     .stats {
