@@ -253,6 +253,42 @@ function createEmptyMandalart() {
     return Array(81).fill('');
 }
 
+function createDefaultMandalart() {
+    const data = Array(81).fill('');
+    // 핵심 목표
+    data[40] = '이직하기';
+
+    // 중앙 블록 - 8개 하위 목표
+    data[30] = '연봉 30% 이상';
+    data[31] = '업무향상';
+    data[32] = '일정관리';
+    data[39] = '이력서';
+    data[41] = '포트폴리오';
+    data[48] = '의사소통 구조화';
+    data[49] = '면접';
+    data[50] = '책읽기';
+
+    // 서브골 센터에 동일 목표 복사
+    data[10] = '연봉 30% 이상';
+    data[13] = '업무향상';
+    data[16] = '일정관리';
+    data[37] = '이력서';
+    data[43] = '포트폴리오';
+    data[64] = '의사소통 구조화';
+    data[67] = '면접';
+    data[70] = '책읽기';
+
+    // 연봉협상 블록 (좌상단, 서브골 10)
+    data[0] = '연봉협상';
+    data[9] = '회고잘쓰기';
+    data[18] = '이직처 연협 성공히';
+    data[19] = '시장가 및 평균 연봉 파악하기';
+    data[20] = 'AI 경쟁력 만들기';
+    data[21] = '업무 사용툴 20개 익히기';
+
+    return data;
+}
+
 function getMandalartCellType(index) {
     // Main goal center
     if (index === 40) return 'main';
@@ -327,7 +363,13 @@ function importData(file) {
 }
 
 function loadMandalart() {
-    mandalartData = Storage.get(CONFIG.mandalartKey) || createEmptyMandalart();
+    const saved = Storage.get(CONFIG.mandalartKey);
+    if (saved && saved.some(cell => cell !== '')) {
+        mandalartData = saved;
+    } else {
+        mandalartData = createDefaultMandalart();
+        saveMandalart();
+    }
 }
 
 function saveMandalart() {
