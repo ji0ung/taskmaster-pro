@@ -2874,26 +2874,34 @@ body {
    Mobile Responsive - Auth & Header
    ============================================ */
 @media (max-width: 768px) {
+    /* 헤더: 로고 + 버튼들 한 줄 */
     .header {
         position: relative !important;
-        display: block !important;
-        padding: var(--spacing-sm);
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 8px 12px !important;
+        gap: 8px !important;
     }
 
     .header-left {
-        display: block !important;
-        width: 100% !important;
-        margin-bottom: var(--spacing-xs);
+        flex-shrink: 0 !important;
+    }
+
+    .logo {
+        font-size: 16px !important;
+    }
+
+    .logo span {
+        font-size: 14px !important;
     }
 
     .header-right {
         display: flex !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        justify-content: flex-end !important;
         align-items: center !important;
         gap: 6px !important;
-        overflow-x: auto;
+        flex-shrink: 0 !important;
     }
 
     .stats {
@@ -2905,7 +2913,14 @@ body {
     }
 
     .theme-toggle {
-        flex-shrink: 0;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 14px !important;
+    }
+
+    /* 이메일 숨김 */
+    .user-email {
+        display: none !important;
     }
 
     .auth-section,
@@ -2913,49 +2928,40 @@ body {
         display: flex !important;
         align-items: center !important;
         gap: 4px !important;
-        margin-left: 0 !important;
-        flex-shrink: 0;
-    }
-
-    .user-email {
-        max-width: 70px !important;
-        font-size: 9px !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        margin: 0 !important;
     }
 
     .btn-sm {
-        padding: 3px 6px !important;
-        font-size: 9px !important;
-        white-space: nowrap;
-        flex-shrink: 0;
+        padding: 4px 8px !important;
+        font-size: 11px !important;
     }
 
-    #logoutBtn {
-        padding: 3px 5px !important;
-        font-size: 8px !important;
+    #syncBtn {
+        padding: 4px 6px !important;
     }
 
-    /* View Tabs - 모바일 */
+    /* 탭: 별도 줄, 가로 스크롤 */
     .view-tabs {
-        position: relative !important;
         display: flex !important;
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
-        margin-top: 0 !important;
-        padding: 8px !important;
-        gap: 4px !important;
-        z-index: 1 !important;
+        padding: 6px 8px !important;
+        gap: 6px !important;
         background-color: var(--color-surface) !important;
+        border-bottom: 1px solid var(--color-border) !important;
+    }
+
+    .view-tabs::-webkit-scrollbar {
+        display: none;
     }
 
     .tab-btn {
         flex-shrink: 0 !important;
-        padding: 6px 10px !important;
-        font-size: 11px !important;
+        padding: 6px 12px !important;
+        font-size: 12px !important;
         white-space: nowrap !important;
+        border-radius: 6px !important;
     }
 
     .tab-icon {
