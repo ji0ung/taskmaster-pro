@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TaskMaster Pro - 전문가용 업무 관리 도구">
+    <title>TaskMaster Pro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">TaskMaster <span>Pro</span></h1>
+            </div>
+            <div class="header-right">
+                <div class="stats" id="stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalTasks">0</span>
+                        <span class="stat-label">전체</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="completedTasks">0</span>
+                        <span class="stat-label">완료</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="completionRate">0%</span>
+                        <span class="stat-label">달성률</span>
+                    </div>
+                </div>
+                <div class="backup-actions">
+                    <button class="icon-btn" id="exportBtn" title="데이터 내보내기">
+                        <span>📤</span>
+                    </button>
+                    <button class="icon-btn" id="importBtn" title="데이터 가져오기">
+                        <span>📥</span>
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+                <button class="theme-toggle" id="themeToggle" aria-label="다크모드 토글">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- View Tabs -->
+        <nav class="view-tabs">
+            <button class="tab-btn active" data-view="kanban">
+                <span class="tab-icon">📋</span> 칸반 보드
+            </button>
+            <button class="tab-btn" data-view="matrix">
+                <span class="tab-icon">🎯</span> 아이젠하워 매트릭스
+            </button>
+            <button class="tab-btn" data-view="calendar">
+                <span class="tab-icon">📅</span> 캘린더
+            </button>
+            <button class="tab-btn" data-view="mandalart">
+                <span class="tab-icon">🎯</span> 만다라트
+            </button>
+            <button class="tab-btn" data-view="books">
+                <span class="tab-icon">📚</span> 독서 기록
+            </button>
+            <button class="tab-btn" data-view="completed">
+                <span class="tab-icon">✅</span> 완료 목록
+            </button>
+            <button class="tab-btn" data-view="report">
+                <span class="tab-icon">📊</span> 위클리 리포트
+            </button>
+        </nav>
+
+        <!-- Search & Filter Bar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="태스크 검색..." aria-label="태스크 검색">
+                <button class="search-clear" id="searchClear" aria-label="검색어 지우기">×</button>
+            </div>
+            <div class="filter-group">
+                <div class="filter-chips" id="priorityChips">
+                    <button class="chip active" data-priority="all">전체</button>
+                    <button class="chip chip-high" data-priority="high">🔴 높음</button>
+                    <button class="chip chip-medium" data-priority="medium">🟡 보통</button>
+                    <button class="chip chip-low" data-priority="low">🟢 낮음</button>
+                </div>
+                <select id="filterDue" aria-label="마감일 필터">
+                    <option value="all">모든 마감일</option>
+                    <option value="overdue">⚠️ 기한 초과</option>
+                    <option value="today">📅 오늘</option>
+                    <option value="week">📆 이번 주</option>
+                    <option value="nodue">➖ 마감일 없음</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Kanban View -->
+            <section class="view kanban-view active" id="kanbanView">
+                <div class="kanban-board">
+                    <div class="kanban-column" data-status="todo">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <h2><span class="column-icon">📝</span> To Do</h2>
+                                <span class="task-count" id="todoCount">0</span>
+                            </div>
+                            <button class="add-task-btn-icon" data-status="todo" title="태스크 추가">+</button>
+                        </div>
+                        <div class="task-list" id="todoList" data-status="todo"></div>
+                    </div>
+
+                    <div class="kanban-column" data-status="inprogress">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <h2><span class="column-icon">🔄</span> In Progress</h2>
+                                <span class="task-count" id="inprogressCount">0</span>
+                            </div>
+                            <button class="add-task-btn-icon" data-status="inprogress" title="태스크 추가">+</button>
+                        </div>
+                        <div class="task-list" id="inprogressList" data-status="inprogress"></div>
+                    </div>
+
+                    <div class="kanban-column" data-status="done">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <h2><span class="column-icon">✅</span> Done</h2>
+                                <span class="task-count" id="doneCount">0</span>
+                            </div>
+                            <button class="add-task-btn-icon" data-status="done" title="태스크 추가">+</button>
+                        </div>
+                        <div class="task-list" id="doneList" data-status="done"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Matrix View -->
+            <section class="view matrix-view" id="matrixView">
+                <div class="matrix-labels">
+                    <div class="label-urgent">긴급 →</div>
+                    <div class="label-important">← 중요</div>
+                </div>
+                <div class="matrix-grid">
+                    <div class="matrix-quadrant q1" data-quadrant="q1">
+                        <div class="quadrant-header">
+                            <h3>🔥 즉시 실행</h3>
+                            <span class="quadrant-desc">긴급 + 중요</span>
+                        </div>
+                        <div class="task-list" id="q1List" data-quadrant="q1"></div>
+                        <button class="add-task-btn" data-quadrant="q1">+ 추가</button>
+                    </div>
+
+                    <div class="matrix-quadrant q2" data-quadrant="q2">
+                        <div class="quadrant-header">
+                            <h3>📅 계획 수립</h3>
+                            <span class="quadrant-desc">중요 + 비긴급</span>
+                        </div>
+                        <div class="task-list" id="q2List" data-quadrant="q2"></div>
+                        <button class="add-task-btn" data-quadrant="q2">+ 추가</button>
+                    </div>
+
+                    <div class="matrix-quadrant q3" data-quadrant="q3">
+                        <div class="quadrant-header">
+                            <h3>👥 위임하기</h3>
+                            <span class="quadrant-desc">긴급 + 비중요</span>
+                        </div>
+                        <div class="task-list" id="q3List" data-quadrant="q3"></div>
+                        <button class="add-task-btn" data-quadrant="q3">+ 추가</button>
+                    </div>
+
+                    <div class="matrix-quadrant q4" data-quadrant="q4">
+                        <div class="quadrant-header">
+                            <h3>🗑️ 제거하기</h3>
+                            <span class="quadrant-desc">비긴급 + 비중요</span>
+                        </div>
+                        <div class="task-list" id="q4List" data-quadrant="q4"></div>
+                        <button class="add-task-btn" data-quadrant="q4">+ 추가</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Calendar View -->
+            <section class="view calendar-view" id="calendarView">
+                <div class="calendar-header">
+                    <h2>📅 캘린더</h2>
+                    <div class="calendar-nav">
+                        <button class="calendar-nav-btn" id="prevMonth">◀</button>
+                        <span class="calendar-current-month" id="currentMonth"></span>
+                        <button class="calendar-nav-btn" id="nextMonth">▶</button>
+                        <button class="calendar-today-btn" id="todayBtn">오늘</button>
+                    </div>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">일</div>
+                        <div class="calendar-weekday">월</div>
+                        <div class="calendar-weekday">화</div>
+                        <div class="calendar-weekday">수</div>
+                        <div class="calendar-weekday">목</div>
+                        <div class="calendar-weekday">금</div>
+                        <div class="calendar-weekday">토</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays"></div>
+                </div>
+                <div class="day-detail" id="dayDetail" style="display: none;">
+                    <div class="day-detail-header">
+                        <h3 id="dayDetailTitle"></h3>
+                        <button class="btn btn-primary btn-sm" id="addTaskToDay">+ 태스크 추가</button>
+                    </div>
+                    <div class="day-detail-tasks" id="dayDetailTasks"></div>
+                </div>
+            </section>
+
+            <!-- Mandal-Art View -->
+            <section class="view mandalart-view" id="mandalartView">
+                <div class="mandalart-header">
+                    <div class="mandalart-title">
+                        <h2>🎯 만다라트 (Mandal-Art)</h2>
+                        <p class="mandalart-desc">중심에 핵심 목표를 작성하고, 8개의 세부 목표와 실행 항목을 채워보세요</p>
+                    </div>
+                    <div class="mandalart-actions">
+                        <button class="btn btn-primary btn-sm" id="generateTasks">📋 태스크 생성</button>
+                        <button class="btn btn-danger btn-sm" id="resetMandalart">초기화</button>
+                    </div>
+                </div>
+                <div class="mandalart-container">
+                    <div class="mandalart-grid" id="mandalartGrid"></div>
+                </div>
+                <div class="mandalart-legend">
+                    <div class="legend-item"><span class="legend-color main"></span> 핵심 목표</div>
+                    <div class="legend-item"><span class="legend-color subgoal"></span> 세부 목표</div>
+                    <div class="legend-item"><span class="legend-color action"></span> 실행 항목</div>
+                </div>
+            </section>
+
+            <!-- Books View -->
+            <section class="view books-view" id="booksView">
+                <div class="books-header">
+                    <div class="books-title">
+                        <h2>📚 독서 기록</h2>
+                        <div class="books-stats">
+                            <span class="book-stat"><span id="totalBooks">0</span>권 읽음</span>
+                            <span class="book-stat"><span id="readingBooks">0</span>권 읽는 중</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="addBookBtn">+ 책 추가</button>
+                </div>
+
+                <div class="books-filter">
+                    <button class="chip active" data-book-filter="all">전체</button>
+                    <button class="chip" data-book-filter="reading">📖 읽는 중</button>
+                    <button class="chip" data-book-filter="completed">✅ 완독</button>
+                    <button class="chip" data-book-filter="wishlist">💫 읽고 싶은</button>
+                </div>
+
+                <div class="books-grid" id="booksGrid"></div>
+            </section>
+
+            <!-- Completed View -->
+            <section class="view completed-view" id="completedView">
+                <div class="completed-header">
+                    <h2>✅ 완료된 태스크</h2>
+                    <button class="btn btn-danger btn-sm" id="clearAllCompleted">모두 삭제</button>
+                </div>
+                <div class="completed-list" id="completedList"></div>
+            </section>
+
+            <!-- Weekly Report View -->
+            <section class="view report-view" id="reportView">
+                <div class="report-header">
+                    <h2>📊 위클리 리포트</h2>
+                    <div class="report-week" id="reportWeek"></div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">✅</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="weeklyCompleted">0</div>
+                            <div class="summary-label">완료한 태스크</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🎯</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="weeklyRate">0%</div>
+                            <div class="summary-label">달성률</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">⏰</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="onTimeRate">0%</div>
+                            <div class="summary-label">기한 준수율</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🔥</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="streakDays">0일</div>
+                            <div class="summary-label">연속 달성</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="report-charts">
+                    <!-- Daily Chart -->
+                    <div class="chart-card">
+                        <h3>📅 요일별 완료 현황</h3>
+                        <div class="daily-chart" id="dailyChart"></div>
+                    </div>
+
+                    <!-- Priority Chart -->
+                    <div class="chart-card">
+                        <h3>🏷️ 우선순위별 완료</h3>
+                        <div class="priority-chart" id="priorityChart"></div>
+                    </div>
+                </div>
+
+                <!-- Achievement Section -->
+                <div class="report-achievements">
+                    <h3>🏆 이번 주 성과</h3>
+                    <div class="achievements-list" id="achievementsList"></div>
+                </div>
+
+                <!-- Pending Tasks -->
+                <div class="report-pending">
+                    <h3>⚠️ 주의가 필요한 태스크</h3>
+                    <div class="pending-list" id="pendingList"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Task Modal -->
+        <div class="modal-overlay" id="taskModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="modalTitle">새 태스크</h3>
+                    <button class="modal-close" id="modalClose">×</button>
+                </div>
+                <form class="modal-form" id="taskForm">
+                    <input type="hidden" id="taskId">
+                    <input type="hidden" id="taskTarget">
+
+                    <div class="form-group">
+                        <label for="taskTitle">제목 *</label>
+                        <input type="text" id="taskTitle" placeholder="태스크 제목을 입력하세요" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskDesc">설명</label>
+                        <textarea id="taskDesc" placeholder="상세 설명 (선택사항)" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taskPriority">우선순위</label>
+                            <select id="taskPriority">
+                                <option value="low">낮음</option>
+                                <option value="medium" selected>보통</option>
+                                <option value="high">높음</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskDueDate">마감일</label>
+                            <input type="date" id="taskDueDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taskReminderDate">🔔 알림 날짜</label>
+                            <input type="date" id="taskReminderDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskReminderTime">알림 시간</label>
+                            <input type="time" id="taskReminderTime" value="09:00">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Book Modal -->
+        <div class="modal-overlay" id="bookModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="bookModalTitle">새 책 추가</h3>
+                    <button class="modal-close" id="bookModalClose">×</button>
+                </div>
+                <form class="modal-form" id="bookForm">
+                    <input type="hidden" id="bookId">
+                    <input type="hidden" id="bookCoverData">
+
+                    <div class="form-group">
+                        <label>책 표지</label>
+                        <div class="book-cover-upload" id="bookCoverUpload">
+                            <div class="cover-preview" id="coverPreview" tabindex="0">
+                                <span class="cover-placeholder">📚<br>클릭 후 Ctrl+V<br>또는 파일 선택</span>
+                            </div>
+                            <div class="cover-buttons">
+                                <label class="btn btn-sm btn-primary" for="coverFileInput">📁 파일 선택</label>
+                                <button type="button" class="btn btn-sm btn-secondary" id="clearCover">삭제</button>
+                            </div>
+                            <input type="file" id="coverFileInput" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookTitle">책 제목 *</label>
+                        <input type="text" id="bookTitle" placeholder="책 제목을 입력하세요" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookAuthor">저자</label>
+                        <input type="text" id="bookAuthor" placeholder="저자명">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bookStatus">상태</label>
+                            <select id="bookStatus">
+                                <option value="wishlist">💫 읽고 싶은</option>
+                                <option value="reading">📖 읽는 중</option>
+                                <option value="completed">✅ 완독</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>평점</label>
+                            <div class="star-rating" id="starRating">
+                                <span class="star" data-value="1">☆</span>
+                                <span class="star" data-value="2">☆</span>
+                                <span class="star" data-value="3">☆</span>
+                                <span class="star" data-value="4">☆</span>
+                                <span class="star" data-value="5">☆</span>
+                            </div>
+                            <input type="hidden" id="bookRating" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bookNotes">메모/감상</label>
+                        <textarea id="bookNotes" placeholder="책에 대한 메모나 감상을 적어보세요" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="bookCancelBtn">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mandal-Art Modal -->
+        <div class="modal-overlay" id="mandalartModal">
+            <div class="modal modal-small">
+                <div class="modal-header">
+                    <h3 id="mandalartModalTitle">목표 설정</h3>
+                    <button class="modal-close" id="mandalartModalClose">×</button>
+                </div>
+                <form class="modal-form" id="mandalartForm">
+                    <input type="hidden" id="mandalartCellIndex">
+                    <input type="hidden" id="mandalartCellType">
+
+                    <div class="form-group">
+                        <label for="mandalartContent">내용</label>
+                        <textarea id="mandalartContent" placeholder="목표 또는 실행 항목을 입력하세요" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="mandalartCancelBtn">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal-overlay" id="deleteModal">
+            <div class="modal modal-small">
+                <div class="modal-header">
+                    <h3>태스크 삭제</h3>
+                    <button class="modal-close" id="deleteModalClose">×</button>
+                </div>
+                <div class="modal-body">
+                    <p>이 태스크를 삭제하시겠습니까?</p>
+                    <p class="delete-task-title" id="deleteTaskTitle"></p>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">취소</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
