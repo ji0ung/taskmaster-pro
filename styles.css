@@ -2876,21 +2876,24 @@ body {
 @media (max-width: 768px) {
     .header {
         position: relative;
-        flex-wrap: wrap;
+        flex-direction: column;
         padding: var(--spacing-sm);
-        gap: var(--spacing-sm);
+        gap: var(--spacing-xs);
     }
 
     .header-left {
-        flex: 1;
-        min-width: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .header-right {
         width: 100%;
-        flex-wrap: wrap;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
         gap: var(--spacing-xs);
-        justify-content: space-between;
     }
 
     .stats {
@@ -2901,6 +2904,10 @@ body {
         display: none;
     }
 
+    .theme-toggle {
+        order: -1;
+    }
+
     .auth-section,
     .user-section {
         margin-left: 0;
@@ -2908,13 +2915,18 @@ body {
     }
 
     .user-email {
-        max-width: 100px;
-        font-size: var(--font-size-xs);
+        max-width: 80px;
+        font-size: 10px;
     }
 
     .btn-sm {
-        padding: 4px 8px;
-        font-size: var(--font-size-xs);
+        padding: 4px 6px;
+        font-size: 10px;
+    }
+
+    /* View Tabs를 별도 줄로 */
+    .view-tabs {
+        margin-top: 0;
     }
 
     /* Auth Modal Mobile */
