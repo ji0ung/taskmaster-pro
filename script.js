@@ -2557,14 +2557,40 @@ function syncAfterChange() {
 // 인증 이벤트 바인딩
 // ============================================
 function bindAuthEvents() {
-    elements.loginBtn?.addEventListener('click', openAuthModal);
-    elements.logoutBtn?.addEventListener('click', handleLogout);
-    elements.syncBtn?.addEventListener('click', handleSync);
-    elements.authModalClose?.addEventListener('click', closeAuthModal);
-    elements.authForm?.addEventListener('submit', handleAuthSubmit);
-    elements.authSwitchBtn?.addEventListener('click', toggleAuthMode);
-    elements.authModal?.addEventListener('click', (e) => {
-        if (e.target === elements.authModal) closeAuthModal();
+    // DOM에서 직접 요소 찾기
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const syncBtn = document.getElementById('syncBtn');
+    const authModalClose = document.getElementById('authModalClose');
+    const authForm = document.getElementById('authForm');
+    const authSwitchBtn = document.getElementById('authSwitchBtn');
+    const authModal = document.getElementById('authModal');
+
+    // elements 객체 업데이트
+    elements.loginBtn = loginBtn;
+    elements.logoutBtn = logoutBtn;
+    elements.syncBtn = syncBtn;
+    elements.authModalClose = authModalClose;
+    elements.authForm = authForm;
+    elements.authSwitchBtn = authSwitchBtn;
+    elements.authModal = authModal;
+    elements.authSection = document.getElementById('authSection');
+    elements.userSection = document.getElementById('userSection');
+    elements.userEmail = document.getElementById('userEmail');
+    elements.authModalTitle = document.getElementById('authModalTitle');
+    elements.authEmail = document.getElementById('authEmail');
+    elements.authPassword = document.getElementById('authPassword');
+    elements.authError = document.getElementById('authError');
+    elements.authSubmitBtn = document.getElementById('authSubmitBtn');
+
+    loginBtn?.addEventListener('click', openAuthModal);
+    logoutBtn?.addEventListener('click', handleLogout);
+    syncBtn?.addEventListener('click', handleSync);
+    authModalClose?.addEventListener('click', closeAuthModal);
+    authForm?.addEventListener('submit', handleAuthSubmit);
+    authSwitchBtn?.addEventListener('click', toggleAuthMode);
+    authModal?.addEventListener('click', (e) => {
+        if (e.target === authModal) closeAuthModal();
     });
 }
 
