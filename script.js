@@ -2214,6 +2214,29 @@ function bindEvents() {
     // Clear cover button
     elements.clearCover.addEventListener('click', resetCoverPreview);
 
+    // 파일/카메라로 이미지 업로드
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            showToast('이미지 파일만 업로드 가능합니다', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target.result;
+            elements.coverPreview.innerHTML = `<img src="${dataUrl}" alt="표지">`;
+            elements.coverPreview.classList.add('has-image');
+            elements.bookCoverData.value = dataUrl;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    document.getElementById('coverFileInput')?.addEventListener('change', handleImageUpload);
+    document.getElementById('coverCameraInput')?.addEventListener('change', handleImageUpload);
+
     elements.booksGrid.addEventListener('click', (e) => {
         const card = e.target.closest('.book-card');
         if (!card) return;

@@ -413,13 +413,15 @@
                         <label>책 표지</label>
                         <div class="book-cover-upload" id="bookCoverUpload">
                             <div class="cover-preview" id="coverPreview" tabindex="0">
-                                <span class="cover-placeholder">📚<br>클릭 후 Ctrl+V<br>또는 파일 선택</span>
+                                <span class="cover-placeholder">📚<br>이미지 선택</span>
                             </div>
                             <div class="cover-buttons">
-                                <label class="btn btn-sm btn-primary" for="coverFileInput">📁 파일 선택</label>
+                                <label class="btn btn-sm btn-primary" for="coverFileInput">📁 갤러리</label>
+                                <label class="btn btn-sm btn-primary" for="coverCameraInput">📷 카메라</label>
                                 <button type="button" class="btn btn-sm btn-secondary" id="clearCover">삭제</button>
                             </div>
                             <input type="file" id="coverFileInput" accept="image/*" style="display: none;">
+                            <input type="file" id="coverCameraInput" accept="image/*" capture="environment" style="display: none;">
                         </div>
                     </div>
 
