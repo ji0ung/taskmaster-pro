@@ -2365,7 +2365,10 @@ function openAuthModal() {
     elements.authSubmitBtn.textContent = '로그인';
     elements.authSwitchText.textContent = '계정이 없으신가요?';
     elements.authSwitchBtn.textContent = '회원가입';
-    elements.authEmail.value = '';
+
+    // 저장된 이메일 불러오기
+    const savedEmail = localStorage.getItem('taskmaster_saved_email');
+    elements.authEmail.value = savedEmail || '';
     elements.authPassword.value = '';
     elements.authError.style.display = 'none';
     elements.authModal.classList.add('active');
@@ -2419,6 +2422,22 @@ async function handleAuthSubmit(e) {
         if (isSignUp && result.data.user && !result.data.session) {
             showAuthError('이메일을 확인해주세요!', 'success');
         } else {
+            // 이메일 저장 체크박스 확인
+            const rememberEmail = document.getElementById('rememberEmail');
+            const autoLogin = document.getElementById('autoLogin');
+
+            if (rememberEmail?.checked) {
+                localStorage.setItem('taskmaster_saved_email', email);
+            } else {
+                localStorage.removeItem('taskmaster_saved_email');
+            }
+
+            if (autoLogin?.checked) {
+                localStorage.setItem('taskmaster_auto_login', 'true');
+            } else {
+                localStorage.removeItem('taskmaster_auto_login');
+            }
+
             closeAuthModal();
         }
     } catch (error) {

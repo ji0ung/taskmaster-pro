@@ -527,6 +527,16 @@
                         <input type="password" id="authPassword" placeholder="비밀번호 (최소 6자)" required minlength="6">
                     </div>
                     <div class="auth-error" id="authError" style="display: none; color: #ef4444; margin-bottom: 1rem; font-size: 0.875rem;"></div>
+                    <div class="auth-options" style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.875rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="rememberEmail" checked>
+                            <span>이메일 저장</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="autoLogin" checked>
+                            <span>자동 로그인</span>
+                        </label>
+                    </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary" id="authSubmitBtn">로그인</button>
                     </div>
