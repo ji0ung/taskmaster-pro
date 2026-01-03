@@ -15,13 +15,13 @@ const CONFIG = {
 const SUPABASE_URL = 'https://zwyhygngftrdkmvcicrb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3eWh5Z25nZnRyZGttdmNpY3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NDI2MDQsImV4cCI6MjA4MzAxODYwNH0.wWbxl4ehTlzTUq-ZYIJYArKJMAFNpf8k5Quy4G7k0NM';
 
-let supabase = null;
+let supabaseClient = null;
 let currentUser = null;
 
 // Supabase 초기화
 function initSupabase() {
     if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         checkAuthState();
     }
 }
@@ -209,6 +209,7 @@ let mandalartData = createEmptyMandalart();
 let books = [];
 let bookFilter = 'all';
 let notifiedReminders = [];
+let completedDates = [];
 
 // ============================================
 // 유틸리티 함수
@@ -2319,9 +2320,9 @@ function bindEvents() {
 let isSignUp = false;
 
 async function checkAuthState() {
-    if (!supabase) return;
+    if (!supabaseClient) return;
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         currentUser = session.user;
         updateAuthUI(true);
@@ -2333,7 +2334,7 @@ async function checkAuthState() {
     }
 
     // 인증 상태 변경 리스너
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (session) {
             currentUser = session.user;
             updateAuthUI(true);
@@ -2392,7 +2393,7 @@ function toggleAuthMode() {
 
 async function handleAuthSubmit(e) {
     e.preventDefault();
-    if (!supabase) {
+    if (!supabaseClient) {
         showAuthError('Supabase 연결 오류');
         return;
     }
@@ -2406,9 +2407,9 @@ async function handleAuthSubmit(e) {
 
         let result;
         if (isSignUp) {
-            result = await supabase.auth.signUp({ email, password });
+            result = await supabaseClient.auth.signUp({ email, password });
         } else {
-            result = await supabase.auth.signInWithPassword({ email, password });
+            result = await supabaseClient.auth.signInWithPassword({ email, password });
         }
 
         if (result.error) {
@@ -2442,8 +2443,8 @@ function showAuthError(message, type = 'error') {
 }
 
 async function handleLogout() {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    if (!supabaseClient) return;
+    await supabaseClient.auth.signOut();
     currentUser = null;
     updateAuthUI(false);
 }
@@ -2452,7 +2453,7 @@ async function handleLogout() {
 // 클라우드 동기화 함수
 // ============================================
 async function saveToCloud() {
-    if (!supabase || !currentUser) return;
+    if (!supabaseClient || !currentUser) return;
 
     try {
         const data = {
@@ -2465,7 +2466,7 @@ async function saveToCloud() {
             completed_dates: completedDates || []
         };
 
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('user_data')
             .upsert(data, { onConflict: 'user_id' });
 
@@ -2477,10 +2478,10 @@ async function saveToCloud() {
 }
 
 async function loadFromCloud() {
-    if (!supabase || !currentUser) return;
+    if (!supabaseClient || !currentUser) return;
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('user_data')
             .select('*')
             .eq('user_id', currentUser.id)
