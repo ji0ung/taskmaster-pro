@@ -2875,58 +2875,72 @@ body {
    ============================================ */
 @media (max-width: 768px) {
     .header {
-        position: relative;
-        flex-direction: column;
+        position: relative !important;
+        display: block !important;
         padding: var(--spacing-sm);
-        gap: var(--spacing-xs);
     }
 
     .header-left {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: var(--spacing-xs);
     }
 
     .header-right {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: var(--spacing-xs);
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 6px !important;
+        overflow-x: auto;
     }
 
     .stats {
-        display: none;
+        display: none !important;
     }
 
     .backup-actions {
-        display: none;
+        display: none !important;
     }
 
     .theme-toggle {
-        order: -1;
+        flex-shrink: 0;
     }
 
     .auth-section,
     .user-section {
-        margin-left: 0;
-        gap: var(--spacing-xs);
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-left: 0 !important;
+        flex-shrink: 0;
     }
 
     .user-email {
-        max-width: 80px;
-        font-size: 10px;
+        max-width: 70px !important;
+        font-size: 9px !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .btn-sm {
-        padding: 4px 6px;
-        font-size: 10px;
+        padding: 3px 6px !important;
+        font-size: 9px !important;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
-    /* View Tabs를 별도 줄로 */
+    #logoutBtn {
+        padding: 3px 5px !important;
+        font-size: 8px !important;
+    }
+
+    /* View Tabs */
     .view-tabs {
         margin-top: 0;
+        padding: var(--spacing-xs) !important;
     }
 
     /* Auth Modal Mobile */
