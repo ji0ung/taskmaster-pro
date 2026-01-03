@@ -2937,10 +2937,29 @@ body {
         font-size: 8px !important;
     }
 
-    /* View Tabs */
+    /* View Tabs - 모바일 */
     .view-tabs {
-        margin-top: 0;
-        padding: var(--spacing-xs) !important;
+        position: relative !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 0 !important;
+        padding: 8px !important;
+        gap: 4px !important;
+        z-index: 1 !important;
+        background-color: var(--color-surface) !important;
+    }
+
+    .tab-btn {
+        flex-shrink: 0 !important;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+    }
+
+    .tab-icon {
+        display: none !important;
     }
 
     /* Auth Modal Mobile */
@@ -2959,28 +2978,6 @@ body {
     .auth-options {
         flex-direction: column;
         gap: 0.5rem !important;
-    }
-
-    /* View Tabs Mobile */
-    .view-tabs {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding: var(--spacing-xs);
-    }
-
-    .view-tabs::-webkit-scrollbar {
-        display: none;
-    }
-
-    .tab-btn {
-        flex-shrink: 0;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        font-size: var(--font-size-xs);
-    }
-
-    .tab-icon {
-        display: none;
     }
 
     /* Toolbar Mobile */
