@@ -2802,3 +2802,70 @@ body {
     gap: var(--spacing-sm);
     justify-content: flex-end;
 }
+
+/* ============================================
+   Auth Styles
+   ============================================ */
+.auth-section,
+.user-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-left: var(--spacing-md);
+}
+
+.user-email {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-link:hover {
+    color: var(--color-primary-hover);
+}
+
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.sync-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.sync-indicator.syncing {
+    color: var(--color-primary);
+}
+
+.sync-indicator.synced {
+    color: var(--color-success);
+}
+
+.sync-indicator.error {
+    color: var(--color-danger);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.syncing .sync-icon {
+    animation: spin 1s linear infinite;
+}

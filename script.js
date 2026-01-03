@@ -9,6 +9,23 @@ const CONFIG = {
     notifiedKey: 'taskmaster_notified'
 };
 
+// ============================================
+// Supabase 설정
+// ============================================
+const SUPABASE_URL = 'https://zwyhygngftrdkmvcicrb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3eWh5Z25nZnRyZGttdmNpY3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NDI2MDQsImV4cCI6MjA4MzAxODYwNH0.wWbxl4ehTlzTUq-ZYIJYArKJMAFNpf8k5Quy4G7k0NM';
+
+let supabase = null;
+let currentUser = null;
+
+// Supabase 초기화
+function initSupabase() {
+    if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        checkAuthState();
+    }
+}
+
 const PRIORITY_LABELS = {
     high: '높음',
     medium: '보통',
@@ -147,7 +164,25 @@ const elements = {
     bookCoverData: $('#bookCoverData'),
     coverPreview: $('#coverPreview'),
     clearCover: $('#clearCover'),
-    starRating: $('#starRating')
+    starRating: $('#starRating'),
+
+    // Auth
+    authSection: $('#authSection'),
+    userSection: $('#userSection'),
+    loginBtn: $('#loginBtn'),
+    logoutBtn: $('#logoutBtn'),
+    syncBtn: $('#syncBtn'),
+    userEmail: $('#userEmail'),
+    authModal: $('#authModal'),
+    authForm: $('#authForm'),
+    authModalTitle: $('#authModalTitle'),
+    authModalClose: $('#authModalClose'),
+    authEmail: $('#authEmail'),
+    authPassword: $('#authPassword'),
+    authError: $('#authError'),
+    authSubmitBtn: $('#authSubmitBtn'),
+    authSwitchText: $('#authSwitchText'),
+    authSwitchBtn: $('#authSwitchBtn')
 };
 
 // ============================================
@@ -374,6 +409,7 @@ function loadMandalart() {
 
 function saveMandalart() {
     Storage.set(CONFIG.mandalartKey, mandalartData);
+    syncAfterChange();
 }
 
 // Books functions
@@ -383,6 +419,7 @@ function loadBooks() {
 
 function saveBooks() {
     Storage.set(CONFIG.booksKey, books);
+    syncAfterChange();
 }
 
 // Notification/Reminder functions
@@ -560,6 +597,7 @@ function loadTasks() {
 
 function saveTasks() {
     Storage.set(CONFIG.storageKey, tasks);
+    syncAfterChange();
 }
 
 function addTask(taskData) {
@@ -2276,6 +2314,261 @@ function bindEvents() {
 }
 
 // ============================================
+// 인증 함수
+// ============================================
+let isSignUp = false;
+
+async function checkAuthState() {
+    if (!supabase) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        currentUser = session.user;
+        updateAuthUI(true);
+        // 로그인 시 클라우드 데이터 로드
+        await loadFromCloud();
+    } else {
+        currentUser = null;
+        updateAuthUI(false);
+    }
+
+    // 인증 상태 변경 리스너
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session) {
+            currentUser = session.user;
+            updateAuthUI(true);
+            if (event === 'SIGNED_IN') {
+                await loadFromCloud();
+            }
+        } else {
+            currentUser = null;
+            updateAuthUI(false);
+        }
+    });
+}
+
+function updateAuthUI(isLoggedIn) {
+    if (isLoggedIn && currentUser) {
+        elements.authSection.style.display = 'none';
+        elements.userSection.style.display = 'flex';
+        elements.userEmail.textContent = currentUser.email;
+    } else {
+        elements.authSection.style.display = 'flex';
+        elements.userSection.style.display = 'none';
+    }
+}
+
+function openAuthModal() {
+    isSignUp = false;
+    elements.authModalTitle.textContent = '로그인';
+    elements.authSubmitBtn.textContent = '로그인';
+    elements.authSwitchText.textContent = '계정이 없으신가요?';
+    elements.authSwitchBtn.textContent = '회원가입';
+    elements.authEmail.value = '';
+    elements.authPassword.value = '';
+    elements.authError.style.display = 'none';
+    elements.authModal.classList.add('active');
+}
+
+function closeAuthModal() {
+    elements.authModal.classList.remove('active');
+}
+
+function toggleAuthMode() {
+    isSignUp = !isSignUp;
+    if (isSignUp) {
+        elements.authModalTitle.textContent = '회원가입';
+        elements.authSubmitBtn.textContent = '회원가입';
+        elements.authSwitchText.textContent = '이미 계정이 있으신가요?';
+        elements.authSwitchBtn.textContent = '로그인';
+    } else {
+        elements.authModalTitle.textContent = '로그인';
+        elements.authSubmitBtn.textContent = '로그인';
+        elements.authSwitchText.textContent = '계정이 없으신가요?';
+        elements.authSwitchBtn.textContent = '회원가입';
+    }
+    elements.authError.style.display = 'none';
+}
+
+async function handleAuthSubmit(e) {
+    e.preventDefault();
+    if (!supabase) {
+        showAuthError('Supabase 연결 오류');
+        return;
+    }
+
+    const email = elements.authEmail.value.trim();
+    const password = elements.authPassword.value;
+
+    try {
+        elements.authSubmitBtn.disabled = true;
+        elements.authSubmitBtn.textContent = isSignUp ? '가입 중...' : '로그인 중...';
+
+        let result;
+        if (isSignUp) {
+            result = await supabase.auth.signUp({ email, password });
+        } else {
+            result = await supabase.auth.signInWithPassword({ email, password });
+        }
+
+        if (result.error) {
+            throw result.error;
+        }
+
+        if (isSignUp && result.data.user && !result.data.session) {
+            showAuthError('이메일을 확인해주세요!', 'success');
+        } else {
+            closeAuthModal();
+        }
+    } catch (error) {
+        console.error('Auth error:', error);
+        let message = error.message;
+        if (message.includes('Invalid login')) {
+            message = '이메일 또는 비밀번호가 올바르지 않습니다.';
+        } else if (message.includes('already registered')) {
+            message = '이미 등록된 이메일입니다.';
+        }
+        showAuthError(message);
+    } finally {
+        elements.authSubmitBtn.disabled = false;
+        elements.authSubmitBtn.textContent = isSignUp ? '회원가입' : '로그인';
+    }
+}
+
+function showAuthError(message, type = 'error') {
+    elements.authError.textContent = message;
+    elements.authError.style.display = 'block';
+    elements.authError.style.color = type === 'success' ? '#22c55e' : '#ef4444';
+}
+
+async function handleLogout() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    currentUser = null;
+    updateAuthUI(false);
+}
+
+// ============================================
+// 클라우드 동기화 함수
+// ============================================
+async function saveToCloud() {
+    if (!supabase || !currentUser) return;
+
+    try {
+        const data = {
+            user_id: currentUser.id,
+            tasks: tasks,
+            eisenhower: { do: [], schedule: [], delegate: [], eliminate: [] },
+            calendar: {},
+            mandalart: mandalartData,
+            books: books,
+            completed_dates: completedDates || []
+        };
+
+        const { error } = await supabase
+            .from('user_data')
+            .upsert(data, { onConflict: 'user_id' });
+
+        if (error) throw error;
+        console.log('Cloud sync successful');
+    } catch (error) {
+        console.error('Cloud sync error:', error);
+    }
+}
+
+async function loadFromCloud() {
+    if (!supabase || !currentUser) return;
+
+    try {
+        const { data, error } = await supabase
+            .from('user_data')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        if (data) {
+            // 클라우드 데이터가 있으면 로드
+            if (data.tasks && data.tasks.length > 0) {
+                tasks = data.tasks;
+                saveTasks();
+            }
+            if (data.mandalart && data.mandalart.length > 0) {
+                mandalartData = data.mandalart;
+                saveMandalart();
+            }
+            if (data.books && data.books.length > 0) {
+                books = data.books;
+                saveBooks();
+            }
+            if (data.completed_dates) {
+                completedDates = data.completed_dates;
+                localStorage.setItem('taskmaster_completed_dates', JSON.stringify(completedDates));
+            }
+            render();
+            console.log('Loaded data from cloud');
+        } else {
+            // 클라우드 데이터가 없으면 로컬 데이터를 클라우드에 저장
+            await saveToCloud();
+        }
+    } catch (error) {
+        console.error('Load from cloud error:', error);
+    }
+}
+
+async function handleSync() {
+    if (!currentUser) {
+        openAuthModal();
+        return;
+    }
+
+    elements.syncBtn.textContent = '⏳';
+    elements.syncBtn.disabled = true;
+
+    try {
+        await saveToCloud();
+        elements.syncBtn.textContent = '✅';
+        setTimeout(() => {
+            elements.syncBtn.textContent = '🔄';
+        }, 2000);
+    } catch (error) {
+        elements.syncBtn.textContent = '❌';
+        setTimeout(() => {
+            elements.syncBtn.textContent = '🔄';
+        }, 2000);
+    } finally {
+        elements.syncBtn.disabled = false;
+    }
+}
+
+// 데이터 변경 시 자동 클라우드 동기화
+function syncAfterChange() {
+    if (currentUser) {
+        // 디바운스로 너무 잦은 동기화 방지
+        clearTimeout(window.syncTimeout);
+        window.syncTimeout = setTimeout(saveToCloud, 2000);
+    }
+}
+
+// ============================================
+// 인증 이벤트 바인딩
+// ============================================
+function bindAuthEvents() {
+    elements.loginBtn?.addEventListener('click', openAuthModal);
+    elements.logoutBtn?.addEventListener('click', handleLogout);
+    elements.syncBtn?.addEventListener('click', handleSync);
+    elements.authModalClose?.addEventListener('click', closeAuthModal);
+    elements.authForm?.addEventListener('submit', handleAuthSubmit);
+    elements.authSwitchBtn?.addEventListener('click', toggleAuthMode);
+    elements.authModal?.addEventListener('click', (e) => {
+        if (e.target === elements.authModal) closeAuthModal();
+    });
+}
+
+// ============================================
 // 초기화
 // ============================================
 function init() {
@@ -2285,7 +2578,9 @@ function init() {
     loadBooks();
     render();
     bindEvents();
+    bindAuthEvents();
     startReminderChecker();
+    initSupabase();
 }
 
 document.addEventListener('DOMContentLoaded', init);
