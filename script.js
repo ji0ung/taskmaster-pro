@@ -33,10 +33,10 @@ function initSupabase() {
             });
             checkAuthState();
         } catch (e) {
-            alert('Supabase 초기화 오류: ' + e.message);
+            showToast('Supabase 초기화 오류', 'error');
         }
     } else {
-        alert('Supabase SDK 로드 실패');
+        showToast('클라우드 연결 실패', 'error');
     }
 }
 
@@ -45,6 +45,37 @@ const PRIORITY_LABELS = {
     medium: '보통',
     low: '낮음'
 };
+
+// ============================================
+// 토스트 알림
+// ============================================
+function showToast(message, type = 'info', duration = 3000) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    const colors = {
+        success: '#22c55e',
+        error: '#ef4444',
+        info: '#3b82f6',
+        warning: '#f59e0b'
+    };
+    toast.style.cssText = `background:${colors[type] || colors.info};color:white;padding:12px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15);opacity:0;transition:opacity 0.3s;`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => toast.style.opacity = '1');
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
 
 // ============================================
 // DOM 요소
@@ -2397,35 +2428,19 @@ async function checkAuthState() {
 }
 
 function updateAuthUI(isLoggedIn) {
-    // DOM에서 직접 요소 찾기 (elements 객체가 null일 수 있음)
     const authSection = document.getElementById('authSection');
     const userSection = document.getElementById('userSection');
     const userEmail = document.getElementById('userEmail');
 
-    // 디버그용 - 화면에 표시
-    let debugDiv = document.getElementById('debugInfo');
-    if (!debugDiv) {
-        debugDiv = document.createElement('div');
-        debugDiv.id = 'debugInfo';
-        debugDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:yellow;color:black;padding:10px;z-index:99999;font-size:12px;';
-        document.body.prepend(debugDiv);
-    }
-    debugDiv.innerHTML = 'DEBUG: isLoggedIn=' + isLoggedIn + ', authSection=' + !!authSection + ', userSection=' + !!userSection + ', currentUser=' + (currentUser?.email || 'null');
-
-    if (!authSection || !userSection) {
-        debugDiv.innerHTML += '<br>ERROR: DOM 요소 없음!';
-        return;
-    }
+    if (!authSection || !userSection) return;
 
     if (isLoggedIn && currentUser) {
         authSection.style.display = 'none';
         userSection.style.display = 'flex';
         if (userEmail) userEmail.textContent = currentUser.email;
-        debugDiv.innerHTML += '<br>로그인 UI 적용 완료!';
     } else {
         authSection.style.display = 'flex';
         userSection.style.display = 'none';
-        debugDiv.innerHTML += '<br>로그아웃 UI 적용';
     }
 }
 
@@ -2492,21 +2507,12 @@ async function handleAuthSubmit(e) {
         if (isSignUp && result.data.user && !result.data.session) {
             showAuthError('이메일을 확인해주세요!', 'success');
         } else {
-            // 디버그용
-            alert('로그인 성공! 세션: ' + (result.data.session ? '있음' : '없음'));
-
-            // 세션 직접 설정
             if (result.data.session) {
                 currentUser = result.data.session.user;
-                alert('UI 업데이트 시도: ' + currentUser.email);
-                try {
-                    updateAuthUI(true);
-                    alert('updateAuthUI 완료!');
-                } catch (uiError) {
-                    alert('updateAuthUI 에러: ' + uiError.message);
-                }
+                updateAuthUI(true);
+                showToast('로그인 성공!', 'success');
             } else {
-                alert('세션이 없습니다!');
+                showToast('세션 오류', 'error');
             }
 
             // 이메일 저장 체크박스 확인
@@ -2554,24 +2560,14 @@ function showAuthError(message, type = 'error') {
 }
 
 async function handleLogout() {
-    console.log('handleLogout 호출됨');
-    if (!supabaseClient) {
-        console.log('supabaseClient가 없음');
-        return;
-    }
+    if (!supabaseClient) return;
     try {
-        const { error } = await supabaseClient.auth.signOut();
-        if (error) {
-            console.error('로그아웃 에러:', error);
-        }
+        await supabaseClient.auth.signOut();
         currentUser = null;
-        tasks = [];
-        saveTasks();
         updateAuthUI(false);
-        render();
-        console.log('로그아웃 완료');
+        showToast('로그아웃 완료', 'info');
     } catch (e) {
-        console.error('로그아웃 예외:', e);
+        showToast('로그아웃 실패', 'error');
     }
 }
 
@@ -2604,11 +2600,7 @@ async function saveToCloud() {
 }
 
 async function loadFromCloud() {
-    alert('loadFromCloud 시작, currentUser: ' + (currentUser?.id || 'null'));
-    if (!supabaseClient || !currentUser) {
-        alert('loadFromCloud 중단: supabaseClient=' + !!supabaseClient + ', currentUser=' + !!currentUser);
-        return;
-    }
+    if (!supabaseClient || !currentUser) return;
 
     try {
         const { data, error } = await supabaseClient
@@ -2617,14 +2609,11 @@ async function loadFromCloud() {
             .eq('user_id', currentUser.id)
             .single();
 
-        alert('클라우드 조회 완료: data=' + !!data + ', error=' + (error?.message || 'none'));
-
         if (error && error.code !== 'PGRST116') {
             throw error;
         }
 
         if (data) {
-            alert('클라우드 데이터: tasks=' + (data.tasks?.length || 0) + ', books=' + (data.books?.length || 0));
 
             // 클라우드 데이터가 있으면 로드 (빈 배열도 허용)
             if (data.tasks && Array.isArray(data.tasks)) {
@@ -2745,7 +2734,6 @@ function bindAuthEvents() {
 // 초기화
 // ============================================
 function init() {
-    alert('앱 시작!'); // 디버그
     initTheme();
     loadTasks();
     loadMandalart();
@@ -2755,7 +2743,6 @@ function init() {
     bindAuthEvents();
     startReminderChecker();
     initSupabase();
-    alert('초기화 완료!'); // 디버그
 }
 
 document.addEventListener('DOMContentLoaded', init);
