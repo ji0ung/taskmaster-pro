@@ -2527,10 +2527,25 @@ function showAuthError(message, type = 'error') {
 }
 
 async function handleLogout() {
-    if (!supabaseClient) return;
-    await supabaseClient.auth.signOut();
-    currentUser = null;
-    updateAuthUI(false);
+    console.log('handleLogout 호출됨');
+    if (!supabaseClient) {
+        console.log('supabaseClient가 없음');
+        return;
+    }
+    try {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+            console.error('로그아웃 에러:', error);
+        }
+        currentUser = null;
+        tasks = [];
+        saveTasks();
+        updateAuthUI(false);
+        render();
+        console.log('로그아웃 완료');
+    } catch (e) {
+        console.error('로그아웃 예외:', e);
+    }
 }
 
 // ============================================
@@ -2562,7 +2577,11 @@ async function saveToCloud() {
 }
 
 async function loadFromCloud() {
-    if (!supabaseClient || !currentUser) return;
+    console.log('loadFromCloud 시작, currentUser:', currentUser?.id);
+    if (!supabaseClient || !currentUser) {
+        console.log('loadFromCloud 중단: supabaseClient 또는 currentUser 없음');
+        return;
+    }
 
     try {
         const { data, error } = await supabaseClient
@@ -2571,21 +2590,30 @@ async function loadFromCloud() {
             .eq('user_id', currentUser.id)
             .single();
 
+        console.log('클라우드 데이터 조회 결과:', { data, error });
+
         if (error && error.code !== 'PGRST116') {
             throw error;
         }
 
         if (data) {
-            // 클라우드 데이터가 있으면 로드
-            if (data.tasks && data.tasks.length > 0) {
+            console.log('클라우드에서 데이터 발견:', {
+                tasks: data.tasks?.length || 0,
+                books: data.books?.length || 0,
+                mandalart: data.mandalart?.length || 0
+            });
+
+            // 클라우드 데이터가 있으면 로드 (빈 배열도 허용)
+            if (data.tasks && Array.isArray(data.tasks)) {
                 tasks = data.tasks;
                 saveTasks();
+                console.log('tasks 로드 완료:', tasks.length);
             }
-            if (data.mandalart && data.mandalart.length > 0) {
+            if (data.mandalart && Array.isArray(data.mandalart)) {
                 mandalartData = data.mandalart;
                 saveMandalart();
             }
-            if (data.books && data.books.length > 0) {
+            if (data.books && Array.isArray(data.books)) {
                 books = data.books;
                 saveBooks();
             }
@@ -2594,8 +2622,9 @@ async function loadFromCloud() {
                 localStorage.setItem('taskmaster_completed_dates', JSON.stringify(completedDates));
             }
             render();
-            console.log('Loaded data from cloud');
+            console.log('클라우드 데이터 로드 및 렌더링 완료');
         } else {
+            console.log('클라우드 데이터 없음, 로컬 데이터를 클라우드에 저장');
             // 클라우드 데이터가 없으면 로컬 데이터를 클라우드에 저장
             await saveToCloud();
         }
@@ -2651,6 +2680,8 @@ function bindAuthEvents() {
     const authSwitchBtn = document.getElementById('authSwitchBtn');
     const authModal = document.getElementById('authModal');
 
+    console.log('bindAuthEvents - logoutBtn:', logoutBtn);
+
     // elements 객체 업데이트
     elements.loginBtn = loginBtn;
     elements.logoutBtn = logoutBtn;
@@ -2676,6 +2707,14 @@ function bindAuthEvents() {
     authSwitchBtn?.addEventListener('click', toggleAuthMode);
     authModal?.addEventListener('click', (e) => {
         if (e.target === authModal) closeAuthModal();
+    });
+
+    // 이벤트 위임으로 로그아웃 버튼 처리 (동적 요소 대응)
+    document.body.addEventListener('click', (e) => {
+        if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
+            console.log('로그아웃 버튼 클릭 (이벤트 위임)');
+            handleLogout();
+        }
     });
 }
 
