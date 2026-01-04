@@ -2807,9 +2807,9 @@ body {
 }
 
 .book-search-thumb {
-    width: 50px;
-    height: 70px;
-    object-fit: cover;
+    width: 70px;
+    height: 100px;
+    object-fit: contain;
     border-radius: var(--radius-sm);
     background: var(--color-border-light);
     flex-shrink: 0;
