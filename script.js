@@ -1563,6 +1563,16 @@ function deleteBook(id) {
 }
 
 function generateTasksFromMandalart() {
+    // 기존 만다라트 태스크 삭제
+    const isFromMandalart = t => t.fromMandalart || (t.description && t.description.includes('만다라트에서 생성된'));
+    const oldCount = tasks.filter(isFromMandalart).length;
+    if (oldCount > 0) {
+        if (!confirm(`기존 만다라트 태스크 ${oldCount}개를 삭제하고 새로 생성하시겠습니까?`)) {
+            return;
+        }
+        tasks = tasks.filter(t => !isFromMandalart(t));
+    }
+
     // 만다라트에서 실행 항목(action)만 추출하여 태스크 생성
     const mainGoal = mandalartData[40]; // 핵심 목표
     const subGoalCenters = [10, 13, 16, 37, 43, 64, 67, 70];
