@@ -2351,30 +2351,41 @@ function bindEvents() {
 let isSignUp = false;
 
 async function checkAuthState() {
-    if (!supabaseClient) return;
+    if (!supabaseClient) {
+        console.log('Supabase client not initialized');
+        return;
+    }
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        currentUser = session.user;
-        updateAuthUI(true);
-        // 로그인 시 클라우드 데이터 로드
-        await loadFromCloud();
-    } else {
-        currentUser = null;
-        updateAuthUI(false);
+    try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        console.log('Initial session check:', session ? 'logged in' : 'not logged in', error);
+
+        if (session) {
+            currentUser = session.user;
+            updateAuthUI(true);
+            await loadFromCloud();
+        } else {
+            currentUser = null;
+            updateAuthUI(false);
+        }
+    } catch (e) {
+        console.error('Session check error:', e);
     }
 
     // 인증 상태 변경 리스너
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        if (session) {
+        console.log('Auth state changed:', event, session ? 'has session' : 'no session');
+
+        if (event === 'SIGNED_IN' && session) {
             currentUser = session.user;
             updateAuthUI(true);
-            if (event === 'SIGNED_IN') {
-                await loadFromCloud();
-            }
-        } else {
+            await loadFromCloud();
+        } else if (event === 'SIGNED_OUT') {
             currentUser = null;
             updateAuthUI(false);
+        } else if (session) {
+            currentUser = session.user;
+            updateAuthUI(true);
         }
     });
 }
@@ -2453,6 +2464,14 @@ async function handleAuthSubmit(e) {
         if (isSignUp && result.data.user && !result.data.session) {
             showAuthError('이메일을 확인해주세요!', 'success');
         } else {
+            console.log('Login successful:', result.data);
+
+            // 세션 직접 설정
+            if (result.data.session) {
+                currentUser = result.data.session.user;
+                updateAuthUI(true);
+            }
+
             // 이메일 저장 체크박스 확인
             const rememberEmail = document.getElementById('rememberEmail');
             const autoLogin = document.getElementById('autoLogin');
@@ -2470,6 +2489,11 @@ async function handleAuthSubmit(e) {
             }
 
             closeAuthModal();
+
+            // 클라우드 데이터 로드
+            if (result.data.session) {
+                await loadFromCloud();
+            }
         }
     } catch (error) {
         console.error('Auth error:', error);
