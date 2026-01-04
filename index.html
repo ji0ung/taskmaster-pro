@@ -553,42 +553,43 @@
             </div>
         </div>
 
-        <!-- Auth Modal -->
-        <div class="modal-overlay" id="authModal">
-            <div class="modal modal-small">
-                <div class="modal-header">
-                    <h3 id="authModalTitle">로그인</h3>
-                    <button class="modal-close" id="authModalClose">×</button>
-                </div>
-                <form class="modal-form" id="authForm">
-                    <div class="form-group">
-                        <label for="authEmail">이메일</label>
-                        <input type="email" id="authEmail" placeholder="이메일을 입력하세요" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="authPassword">비밀번호</label>
-                        <input type="password" id="authPassword" placeholder="비밀번호 (최소 6자)" required minlength="6">
-                    </div>
-                    <div class="auth-error" id="authError" style="display: none; color: #ef4444; margin-bottom: 1rem; font-size: 0.875rem;"></div>
-                    <div class="auth-options" style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.875rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" id="rememberEmail" checked>
-                            <span>이메일 저장</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" id="autoLogin" checked>
-                            <span>자동 로그인</span>
-                        </label>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="authSubmitBtn">로그인</button>
-                    </div>
-                    <div class="auth-switch" style="text-align: center; margin-top: 1rem;">
-                        <span id="authSwitchText">계정이 없으신가요?</span>
-                        <button type="button" class="btn-link" id="authSwitchBtn">회원가입</button>
-                    </div>
-                </form>
+    </div>
+
+    <!-- Auth Modal (mainApp 바깥에 위치) -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal modal-small">
+            <div class="modal-header">
+                <h3 id="authModalTitle">로그인</h3>
+                <button class="modal-close" id="authModalClose">×</button>
             </div>
+            <form class="modal-form" id="authForm">
+                <div class="form-group">
+                    <label for="authEmail">이메일</label>
+                    <input type="email" id="authEmail" placeholder="이메일을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">비밀번호</label>
+                    <input type="password" id="authPassword" placeholder="비밀번호 (최소 6자)" required minlength="6">
+                </div>
+                <div class="auth-error" id="authError" style="display: none; color: #ef4444; margin-bottom: 1rem; font-size: 0.875rem;"></div>
+                <div class="auth-options" style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.875rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="rememberEmail" checked>
+                        <span>이메일 저장</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="autoLogin" checked>
+                        <span>자동 로그인</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="authSubmitBtn">로그인</button>
+                </div>
+                <div class="auth-switch" style="text-align: center; margin-top: 1rem;">
+                    <span id="authSwitchText">계정이 없으신가요?</span>
+                    <button type="button" class="btn-link" id="authSwitchBtn">회원가입</button>
+                </div>
+            </form>
         </div>
     </div>
 

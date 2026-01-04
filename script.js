@@ -2505,7 +2505,12 @@ function openAuthModal() {
     const authPassword = document.getElementById('authPassword');
     const authError = document.getElementById('authError');
 
-    if (!authModal) return;
+    console.log('openAuthModal called, authModal:', authModal);
+
+    if (!authModal) {
+        console.log('authModal not found!');
+        return;
+    }
 
     if (authModalTitle) authModalTitle.textContent = '로그인';
     if (authSubmitBtn) authSubmitBtn.textContent = '로그인';
