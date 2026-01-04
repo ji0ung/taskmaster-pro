@@ -1193,6 +1193,24 @@ body {
     color: var(--color-primary);
 }
 
+.progress-add-btn {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-left: auto;
+}
+
+.progress-add-btn:hover {
+    background: var(--color-primary-hover);
+    transform: scale(1.05);
+}
+
 /* ============================================
    Buttons
    ============================================ */
@@ -2192,6 +2210,22 @@ body {
 
 .day-more:hover {
     color: var(--color-primary);
+}
+
+/* Calendar Drag & Drop */
+.day-task.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.calendar-day.drag-over {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+.calendar-day.drag-over .day-number {
+    color: var(--color-primary);
+    font-weight: 700;
 }
 
 /* Calendar Day Detail Modal */

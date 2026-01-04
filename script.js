@@ -877,7 +877,7 @@ function renderCalendar() {
         if (dayTasks.length > 0) {
             const displayTasks = dayTasks.slice(0, 3);
             tasksHtml = displayTasks.map(t => `
-                <div class="day-task ${t.priority} ${t.completed ? 'completed' : ''}" data-id="${t.id}">
+                <div class="day-task ${t.priority} ${t.completed ? 'completed' : ''}" data-id="${t.id}" draggable="true">
                     ${escapeHtml(t.title)}
                 </div>
             `).join('');
@@ -1998,16 +1998,46 @@ function renderTaskProgress(task) {
     const isComplete = current >= target;
 
     return `
-        <div class="task-progress">
+        <div class="task-progress" data-task-id="${task.id}">
             <div class="task-progress-bar">
                 <div class="task-progress-fill ${isComplete ? 'complete' : ''}" style="width: ${percent}%"></div>
             </div>
             <div class="task-progress-text">
                 <span class="task-progress-count">${current}/${target}회</span>
                 <span>${percent}%</span>
+                ${!isComplete ? `<button type="button" class="progress-add-btn" data-task-id="${task.id}">+1</button>` : ''}
             </div>
         </div>
     `;
+}
+
+function handleProgressAddClick(e) {
+    const btn = e.target.closest('.progress-add-btn');
+    if (!btn) return;
+
+    e.stopPropagation();
+    const taskId = btn.dataset.taskId;
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const target = task.targetCount || 1;
+    const current = task.currentCount || 0;
+
+    if (current < target) {
+        task.currentCount = current + 1;
+
+        // 목표 달성 시 자동 완료
+        if (task.currentCount >= target) {
+            task.completed = true;
+            task.status = 'done';
+            showToast(`"${task.title}" 목표 달성!`, 'success');
+        } else {
+            showToast(`${task.currentCount}/${target}회 완료`, 'info');
+        }
+
+        saveTasks();
+        render();
+    }
 }
 
 function updateStats() {
@@ -2144,6 +2174,12 @@ function handleAddTaskClick(e) {
 }
 
 function handleTaskCardClick(e) {
+    // +1 버튼 클릭 처리 (카드 외부에서도 동작)
+    if (e.target.closest('.progress-add-btn')) {
+        handleProgressAddClick(e);
+        return;
+    }
+
     const card = e.target.closest('.task-card');
     if (!card) return;
 
@@ -2433,6 +2469,90 @@ function handleCalendarDayClick(e) {
     render();
 }
 
+// ============================================
+// 캘린더 드래그 앤 드롭
+// ============================================
+let draggedTaskId = null;
+
+function handleCalendarDragStart(e) {
+    const taskEl = e.target.closest('.day-task');
+    if (!taskEl) return;
+
+    draggedTaskId = taskEl.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedTaskId);
+
+    // 드래그 중 스타일
+    setTimeout(() => {
+        taskEl.classList.add('dragging');
+    }, 0);
+}
+
+function handleCalendarDragEnd(e) {
+    const taskEl = e.target.closest('.day-task');
+    if (taskEl) {
+        taskEl.classList.remove('dragging');
+    }
+    draggedTaskId = null;
+
+    // 모든 드래그 오버 스타일 제거
+    document.querySelectorAll('.calendar-day.drag-over').forEach(el => {
+        el.classList.remove('drag-over');
+    });
+}
+
+function handleCalendarDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const dayEl = e.target.closest('.calendar-day');
+    if (dayEl && !dayEl.classList.contains('drag-over')) {
+        // 이전 하이라이트 제거
+        document.querySelectorAll('.calendar-day.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+        dayEl.classList.add('drag-over');
+    }
+}
+
+function handleCalendarDragLeave(e) {
+    const dayEl = e.target.closest('.calendar-day');
+    if (dayEl && !dayEl.contains(e.relatedTarget)) {
+        dayEl.classList.remove('drag-over');
+    }
+}
+
+function handleCalendarDrop(e) {
+    e.preventDefault();
+
+    const dayEl = e.target.closest('.calendar-day');
+    if (!dayEl) return;
+
+    dayEl.classList.remove('drag-over');
+
+    const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+    if (!taskId) return;
+
+    const newDateStr = dayEl.dataset.date;
+    if (!newDateStr) return;
+
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // 날짜 변경 (createdAt 업데이트)
+    const newDate = new Date(newDateStr);
+    const oldDate = new Date(task.createdAt);
+
+    // 시간은 유지하고 날짜만 변경
+    newDate.setHours(oldDate.getHours(), oldDate.getMinutes(), oldDate.getSeconds());
+
+    task.createdAt = newDate.getTime();
+    saveTasks();
+    render();
+
+    showToast(`태스크를 ${newDateStr}로 이동했습니다`, 'success');
+}
+
 function handleDayDetailClick(e) {
     const taskEl = e.target.closest('.day-detail-task');
     if (!taskEl) return;
@@ -2556,6 +2676,13 @@ function bindEvents() {
     elements.prevMonth.addEventListener('click', handlePrevMonth);
     elements.nextMonth.addEventListener('click', handleNextMonth);
     elements.todayBtn.addEventListener('click', handleTodayBtn);
+
+    // Calendar Drag & Drop
+    elements.calendarDays.addEventListener('dragstart', handleCalendarDragStart);
+    elements.calendarDays.addEventListener('dragend', handleCalendarDragEnd);
+    elements.calendarDays.addEventListener('dragover', handleCalendarDragOver);
+    elements.calendarDays.addEventListener('dragleave', handleCalendarDragLeave);
+    elements.calendarDays.addEventListener('drop', handleCalendarDrop);
 
     // Calendar Mode Toggle
     const monthModeBtn = document.getElementById('monthModeBtn');
@@ -2767,7 +2894,7 @@ function bindEvents() {
 
     elements.countPlus?.addEventListener('click', () => {
         const current = parseInt(elements.taskCurrentCount.value) || 0;
-        const target = parseInt(elements.taskTargetCount.value) || 100;
+        const target = parseInt(elements.taskTargetCount.value) || 1000;
         if (current < target) {
             elements.taskCurrentCount.value = current + 1;
         }
