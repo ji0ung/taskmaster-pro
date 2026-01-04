@@ -9,7 +9,41 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="app">
+    <!-- 로그인 필요 화면 -->
+    <div class="landing-page" id="landingPage">
+        <div class="landing-content">
+            <h1 class="landing-logo">TaskMaster <span>Pro</span></h1>
+            <p class="landing-subtitle">당신의 생산성을 극대화하는 스마트한 업무 관리 도구</p>
+
+            <div class="landing-features">
+                <div class="feature-item">
+                    <span class="feature-icon">📋</span>
+                    <h3>칸반 보드</h3>
+                    <p>드래그앤드롭으로 쉽게 태스크 관리</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    <h3>아이젠하워 매트릭스</h3>
+                    <p>중요도와 긴급도로 우선순위 결정</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📅</span>
+                    <h3>캘린더</h3>
+                    <p>일정을 한눈에 확인</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">☁️</span>
+                    <h3>클라우드 동기화</h3>
+                    <p>어디서든 데이터 접근</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-lg" id="landingLoginBtn">로그인하여 시작하기</button>
+            <p class="landing-note">계정이 없으신가요? 로그인 화면에서 회원가입할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div class="app" id="mainApp" style="display: none;">
         <!-- Header -->
         <header class="header">
             <div class="header-left">

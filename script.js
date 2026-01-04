@@ -2431,16 +2431,22 @@ function updateAuthUI(isLoggedIn) {
     const authSection = document.getElementById('authSection');
     const userSection = document.getElementById('userSection');
     const userEmail = document.getElementById('userEmail');
-
-    if (!authSection || !userSection) return;
+    const landingPage = document.getElementById('landingPage');
+    const mainApp = document.getElementById('mainApp');
 
     if (isLoggedIn && currentUser) {
-        authSection.style.display = 'none';
-        userSection.style.display = 'flex';
+        // 로그인 상태: 메인 앱 표시
+        if (landingPage) landingPage.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'block';
+        if (authSection) authSection.style.display = 'none';
+        if (userSection) userSection.style.display = 'flex';
         if (userEmail) userEmail.textContent = currentUser.email;
     } else {
-        authSection.style.display = 'flex';
-        userSection.style.display = 'none';
+        // 로그아웃 상태: 랜딩 페이지 표시
+        if (landingPage) landingPage.style.display = 'flex';
+        if (mainApp) mainApp.style.display = 'none';
+        if (authSection) authSection.style.display = 'flex';
+        if (userSection) userSection.style.display = 'none';
     }
 }
 
@@ -2692,8 +2698,6 @@ function bindAuthEvents() {
     const authSwitchBtn = document.getElementById('authSwitchBtn');
     const authModal = document.getElementById('authModal');
 
-    console.log('bindAuthEvents - logoutBtn:', logoutBtn);
-
     // elements 객체 업데이트
     elements.loginBtn = loginBtn;
     elements.logoutBtn = logoutBtn;
@@ -2721,10 +2725,13 @@ function bindAuthEvents() {
         if (e.target === authModal) closeAuthModal();
     });
 
+    // 랜딩 페이지 로그인 버튼
+    const landingLoginBtn = document.getElementById('landingLoginBtn');
+    landingLoginBtn?.addEventListener('click', openAuthModal);
+
     // 이벤트 위임으로 로그아웃 버튼 처리 (동적 요소 대응)
     document.body.addEventListener('click', (e) => {
         if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
-            console.log('로그아웃 버튼 클릭 (이벤트 위임)');
             handleLogout();
         }
     });
