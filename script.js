@@ -1302,15 +1302,16 @@ function generateTasksFromMandalart() {
             const newTask = {
                 id: generateId(),
                 title: actionContent,
-                description: `[${mainGoal || '핵심 목표'}] > ${subGoal}`,
+                description: `만다라트에서 생성된 태스크입니다.`,
                 priority: priorityMap[blockIdx] || 'medium',
                 dueDate: null,
                 status: 'todo',
                 quadrant: blockIdx <= 2 ? 'q1' : blockIdx <= 5 ? 'q2' : 'q3',
                 completed: false,
                 createdAt: Date.now(),
-                epic: mainGoal || '',
-                story: subGoal || ''
+                epic: mainGoal || '',      // 핵심 목표 = Epic
+                story: subGoal || ''       // 세부 목표 = Story
+                // Task = 실행 항목 (title)
             };
 
             tasks.unshift(newTask);
@@ -1633,10 +1634,20 @@ function renderTaskCards(taskList, type, target = null) {
             ? `<span class="task-due ${dueInfo.overdue ? 'overdue' : ''}">📅 ${dueInfo.text}</span>`
             : '';
 
-        // 에픽/스토리 태그
-        const epicHtml = task.epic ? `<span class="task-tag epic">🎯 ${escapeHtml(task.epic)}</span>` : '';
-        const storyHtml = task.story ? `<span class="task-tag story">📌 ${escapeHtml(task.story)}</span>` : '';
-        const tagsHtml = (epicHtml || storyHtml) ? `<div class="task-tags">${epicHtml}${storyHtml}</div>` : '';
+        // 에픽/스토리 위계 표시 (Epic > Story > Task)
+        let hierarchyHtml = '';
+        if (task.epic || task.story) {
+            const epicTag = task.epic ? `<span class="task-tag epic">Epic: ${escapeHtml(task.epic)}</span>` : '';
+            const storyTag = task.story ? `<span class="task-tag story">Story: ${escapeHtml(task.story)}</span>` : '';
+            hierarchyHtml = `<div class="task-tags">
+                <div class="task-hierarchy">
+                    ${epicTag}
+                    ${task.epic && task.story ? '<span class="separator">▸</span>' : ''}
+                    ${storyTag}
+                </div>
+            </div>`;
+        }
+        const tagsHtml = hierarchyHtml;
 
         return `
             <div class="task-card ${task.completed ? 'completed' : ''} ${task.id === selectedTaskId ? 'selected' : ''}"
