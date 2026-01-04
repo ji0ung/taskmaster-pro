@@ -2769,9 +2769,11 @@ function bindAuthEvents() {
         if (e.target === authModal) closeAuthModal();
     });
 
-    // 랜딩 페이지 로그인 버튼
+    // 랜딩 페이지 로그인 버튼들
     const landingLoginBtn = document.getElementById('landingLoginBtn');
+    const headerLoginBtn = document.getElementById('headerLoginBtn');
     landingLoginBtn?.addEventListener('click', openAuthModal);
+    headerLoginBtn?.addEventListener('click', openAuthModal);
 }
 
 // ============================================

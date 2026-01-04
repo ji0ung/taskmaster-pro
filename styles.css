@@ -3197,15 +3197,47 @@ body {
 .landing-page {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.landing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-xl);
+    width: 100%;
+}
+
+.landing-header .logo {
+    color: white;
+}
+
+.landing-header .logo span {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.landing-content-wrapper {
+    flex: 1;
+    display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: var(--spacing-xl);
 }
 
 .landing-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
 }
 
 .landing-logo {
