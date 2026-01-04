@@ -1308,7 +1308,9 @@ function generateTasksFromMandalart() {
                 status: 'todo',
                 quadrant: blockIdx <= 2 ? 'q1' : blockIdx <= 5 ? 'q2' : 'q3',
                 completed: false,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                epic: mainGoal || '',
+                story: subGoal || ''
             };
 
             tasks.unshift(newTask);
@@ -1631,6 +1633,11 @@ function renderTaskCards(taskList, type, target = null) {
             ? `<span class="task-due ${dueInfo.overdue ? 'overdue' : ''}">📅 ${dueInfo.text}</span>`
             : '';
 
+        // 에픽/스토리 태그
+        const epicHtml = task.epic ? `<span class="task-tag epic">🎯 ${escapeHtml(task.epic)}</span>` : '';
+        const storyHtml = task.story ? `<span class="task-tag story">📌 ${escapeHtml(task.story)}</span>` : '';
+        const tagsHtml = (epicHtml || storyHtml) ? `<div class="task-tags">${epicHtml}${storyHtml}</div>` : '';
+
         return `
             <div class="task-card ${task.completed ? 'completed' : ''} ${task.id === selectedTaskId ? 'selected' : ''}"
                  data-id="${task.id}"
@@ -1644,6 +1651,7 @@ function renderTaskCards(taskList, type, target = null) {
                     <div class="task-checkbox" role="checkbox" aria-checked="${task.completed}"></div>
                     <div class="task-content">
                         <div class="task-title">${highlightText(task.title, searchQuery)}</div>
+                        ${tagsHtml}
                         ${task.description ? `<div class="task-desc">${highlightText(task.description, searchQuery)}</div>` : ''}
                         <div class="task-meta">
                             <span class="task-priority ${task.priority}">${PRIORITY_LABELS[task.priority]}</span>
