@@ -1008,6 +1008,36 @@ function closeMandalartModal() {
     elements.mandalartModal.classList.remove('active');
 }
 
+function deleteMandalartCell() {
+    const index = parseInt(elements.mandalartCellIndex.value);
+    const type = elements.mandalartCellType.value;
+
+    mandalartData[index] = '';
+
+    // If this is a sub-goal (in central block), also clear corresponding outer block center
+    if (type === 'central') {
+        const centralBlock = [30, 31, 32, 39, 41, 48, 49, 50];
+        const subGoalCenters = [10, 13, 16, 37, 43, 64, 67, 70];
+        const centralIndex = centralBlock.indexOf(index);
+        if (centralIndex !== -1) {
+            mandalartData[subGoalCenters[centralIndex]] = '';
+        }
+    }
+
+    // If this is a sub-goal center, also clear central block
+    const subGoalCenters = [10, 13, 16, 37, 43, 64, 67, 70];
+    const centralBlock = [30, 31, 32, 39, 41, 48, 49, 50];
+    const subGoalIndex = subGoalCenters.indexOf(index);
+    if (subGoalIndex !== -1) {
+        mandalartData[centralBlock[subGoalIndex]] = '';
+    }
+
+    saveMandalart();
+    closeMandalartModal();
+    render();
+    showToast('삭제되었습니다', 'info');
+}
+
 function saveMandalartCell() {
     const index = parseInt(elements.mandalartCellIndex.value);
     const content = elements.mandalartContent.value.trim();
@@ -2192,6 +2222,10 @@ function bindEvents() {
         if (e.target === elements.mandalartModal) closeMandalartModal();
     });
 
+    // 만다라트 삭제 버튼
+    const mandalartDeleteBtn = document.getElementById('mandalartDeleteBtn');
+    mandalartDeleteBtn?.addEventListener('click', deleteMandalartCell);
+
     elements.resetMandalart.addEventListener('click', resetMandalartData);
     elements.generateTasks.addEventListener('click', generateTasksFromMandalart);
 
@@ -2570,6 +2604,8 @@ async function handleLogout() {
     try {
         await supabaseClient.auth.signOut();
         currentUser = null;
+        // localStorage의 세션도 명시적으로 제거
+        localStorage.removeItem('taskmaster-auth');
         updateAuthUI(false);
         showToast('로그아웃 완료', 'info');
     } catch (e) {
@@ -2728,13 +2764,6 @@ function bindAuthEvents() {
     // 랜딩 페이지 로그인 버튼
     const landingLoginBtn = document.getElementById('landingLoginBtn');
     landingLoginBtn?.addEventListener('click', openAuthModal);
-
-    // 이벤트 위임으로 로그아웃 버튼 처리 (동적 요소 대응)
-    document.body.addEventListener('click', (e) => {
-        if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
-            handleLogout();
-        }
-    });
 }
 
 // ============================================
