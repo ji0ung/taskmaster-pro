@@ -2494,21 +2494,35 @@ function updateAuthUI(isLoggedIn) {
 
 function openAuthModal() {
     isSignUp = false;
-    elements.authModalTitle.textContent = '로그인';
-    elements.authSubmitBtn.textContent = '로그인';
-    elements.authSwitchText.textContent = '계정이 없으신가요?';
-    elements.authSwitchBtn.textContent = '회원가입';
+
+    // DOM에서 직접 요소 찾기
+    const authModal = document.getElementById('authModal');
+    const authModalTitle = document.getElementById('authModalTitle');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authSwitchText = document.getElementById('authSwitchText');
+    const authSwitchBtn = document.getElementById('authSwitchBtn');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authError = document.getElementById('authError');
+
+    if (!authModal) return;
+
+    if (authModalTitle) authModalTitle.textContent = '로그인';
+    if (authSubmitBtn) authSubmitBtn.textContent = '로그인';
+    if (authSwitchText) authSwitchText.textContent = '계정이 없으신가요?';
+    if (authSwitchBtn) authSwitchBtn.textContent = '회원가입';
 
     // 저장된 이메일 불러오기
     const savedEmail = localStorage.getItem('taskmaster_saved_email');
-    elements.authEmail.value = savedEmail || '';
-    elements.authPassword.value = '';
-    elements.authError.style.display = 'none';
-    elements.authModal.classList.add('active');
+    if (authEmail) authEmail.value = savedEmail || '';
+    if (authPassword) authPassword.value = '';
+    if (authError) authError.style.display = 'none';
+    authModal.classList.add('active');
 }
 
 function closeAuthModal() {
-    elements.authModal.classList.remove('active');
+    const authModal = document.getElementById('authModal');
+    if (authModal) authModal.classList.remove('active');
 }
 
 function toggleAuthMode() {
