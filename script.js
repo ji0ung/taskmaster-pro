@@ -797,9 +797,11 @@ function render() {
 }
 
 function renderKanban() {
-    const todoTasks = filterTasks(tasks.filter(t => t.status === 'todo'));
-    const inprogressTasks = filterTasks(tasks.filter(t => t.status === 'inprogress'));
-    const doneTasks = filterTasks(tasks.filter(t => t.status === 'done'));
+    // 완료된 태스크는 칸반보드에서 숨김 (완료 목록 탭에서만 표시)
+    const todoTasks = filterTasks(tasks.filter(t => t.status === 'todo' && !t.completed));
+    const inprogressTasks = filterTasks(tasks.filter(t => t.status === 'inprogress' && !t.completed));
+    // done 상태 태스크는 칸반보드에서 숨김
+    const doneTasks = [];
 
     elements.todoList.innerHTML = renderTaskCards(todoTasks, 'status', 'todo');
     elements.inprogressList.innerHTML = renderTaskCards(inprogressTasks, 'status', 'inprogress');
@@ -813,10 +815,12 @@ function renderKanban() {
 }
 
 function renderMatrix() {
-    const q1Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q1' && !t.completed));
-    const q2Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q2' && !t.completed));
-    const q3Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q3' && !t.completed));
-    const q4Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q4' && !t.completed));
+    // 만다라트에서 생성된 태스크와 완료된 태스크 제외
+    const isFromMandalart = t => t.fromMandalart || (t.description && t.description.includes('만다라트에서 생성된'));
+    const q1Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q1' && !t.completed && !isFromMandalart(t)));
+    const q2Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q2' && !t.completed && !isFromMandalart(t)));
+    const q3Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q3' && !t.completed && !isFromMandalart(t)));
+    const q4Tasks = filterTasks(tasks.filter(t => t.quadrant === 'q4' && !t.completed && !isFromMandalart(t)));
 
     elements.q1List.innerHTML = renderTaskCards(q1Tasks, 'quadrant', 'q1');
     elements.q2List.innerHTML = renderTaskCards(q2Tasks, 'quadrant', 'q2');
@@ -864,9 +868,9 @@ function renderCalendar() {
         const isToday = currentDate.getTime() === today.getTime();
         const isSelected = selectedDate === dateStr;
 
-        // 해당 날짜의 태스크 (생성일자 기준)
+        // 해당 날짜의 태스크 (생성일자 기준) - 완료된 태스크 제외
         const dayTasks = tasks.filter(t => {
-            if (!t.createdAt) return false;
+            if (!t.createdAt || t.completed) return false;
             const created = new Date(t.createdAt);
             const createdDateStr = formatDateStr(created.getFullYear(), created.getMonth(), created.getDate());
             return createdDateStr === dateStr;
@@ -955,8 +959,9 @@ function renderTimeline() {
 
     // 오늘 날짜의 태스크 가져오기
     const today = selectedDate || formatDateStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    // 완료된 태스크 제외
     const dayTasks = tasks.filter(t => {
-        if (!t.createdAt) return false;
+        if (!t.createdAt || t.completed) return false;
         const created = new Date(t.createdAt);
         const createdDateStr = formatDateStr(created.getFullYear(), created.getMonth(), created.getDate());
         return createdDateStr === today;
@@ -1622,7 +1627,8 @@ function generateTasksFromMandalart() {
                 epic: mainGoal || '',      // 핵심 목표 = Epic
                 story: subGoal || '',      // 세부 목표 = Story
                 targetCount: 1,            // 기본 목표 횟수
-                currentCount: 0            // 현재 진행 횟수
+                currentCount: 0,           // 현재 진행 횟수
+                fromMandalart: true        // 만다라트에서 생성됨
             };
 
             tasks.unshift(newTask);
@@ -1644,9 +1650,9 @@ function generateTasksFromMandalart() {
 }
 
 function renderDayDetail(dateStr) {
-    // 생성일자 기준으로 필터링
+    // 생성일자 기준으로 필터링 - 완료된 태스크 제외
     const dayTasks = tasks.filter(t => {
-        if (!t.createdAt) return false;
+        if (!t.createdAt || t.completed) return false;
         const created = new Date(t.createdAt);
         const createdDateStr = formatDateStr(created.getFullYear(), created.getMonth(), created.getDate());
         return createdDateStr === dateStr;
