@@ -1215,6 +1215,117 @@ function handleImagePaste(e) {
 
 function closeBookModal() {
     elements.bookModal.classList.remove('active');
+    // 검색 결과 초기화
+    const searchResults = document.getElementById('bookSearchResults');
+    const searchInput = document.getElementById('bookSearchInput');
+    if (searchResults) searchResults.style.display = 'none';
+    if (searchInput) searchInput.value = '';
+}
+
+// ============================================
+// Google Books API 검색
+// ============================================
+async function searchBooks(query) {
+    if (!query || query.trim().length < 2) {
+        showToast('검색어를 2자 이상 입력해주세요', 'info');
+        return;
+    }
+
+    const searchResults = document.getElementById('bookSearchResults');
+    if (!searchResults) return;
+
+    // 로딩 표시
+    searchResults.style.display = 'block';
+    searchResults.innerHTML = '<div class="book-search-loading">검색 중...</div>';
+
+    try {
+        const response = await fetch(
+            `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&langRestrict=ko`
+        );
+
+        if (!response.ok) throw new Error('검색 실패');
+
+        const data = await response.json();
+
+        if (!data.items || data.items.length === 0) {
+            searchResults.innerHTML = '<div class="book-search-empty">검색 결과가 없습니다</div>';
+            return;
+        }
+
+        renderBookSearchResults(data.items);
+    } catch (error) {
+        console.error('Book search error:', error);
+        searchResults.innerHTML = '<div class="book-search-empty">검색 중 오류가 발생했습니다</div>';
+    }
+}
+
+function renderBookSearchResults(books) {
+    const searchResults = document.getElementById('bookSearchResults');
+    if (!searchResults) return;
+
+    const html = books.map(book => {
+        const info = book.volumeInfo || {};
+        const thumbnail = info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || '';
+        const title = info.title || '제목 없음';
+        const authors = info.authors?.join(', ') || '저자 미상';
+        const publisher = info.publisher || '';
+        const isbn = info.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier
+                  || info.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
+                  || '';
+
+        return `
+            <div class="book-search-item"
+                 data-title="${escapeHtml(title)}"
+                 data-author="${escapeHtml(authors)}"
+                 data-cover="${thumbnail}"
+                 data-isbn="${isbn}"
+                 data-publisher="${escapeHtml(publisher)}">
+                ${thumbnail
+                    ? `<img class="book-search-thumb" src="${thumbnail}" alt="${escapeHtml(title)}">`
+                    : '<div class="book-search-thumb" style="display:flex;align-items:center;justify-content:center;">📚</div>'
+                }
+                <div class="book-search-info">
+                    <div class="book-search-title">${escapeHtml(title)}</div>
+                    <div class="book-search-author">${escapeHtml(authors)}</div>
+                    ${publisher ? `<div class="book-search-publisher">${escapeHtml(publisher)}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    searchResults.innerHTML = html;
+
+    // 클릭 이벤트 바인딩
+    searchResults.querySelectorAll('.book-search-item').forEach(item => {
+        item.addEventListener('click', () => selectBookFromSearch(item));
+    });
+}
+
+function selectBookFromSearch(item) {
+    const title = item.dataset.title;
+    const author = item.dataset.author;
+    const cover = item.dataset.cover;
+    const isbn = item.dataset.isbn;
+
+    // 폼 필드 채우기
+    if (elements.bookTitle) elements.bookTitle.value = title;
+    if (elements.bookAuthor) elements.bookAuthor.value = author;
+
+    const bookIsbn = document.getElementById('bookIsbn');
+    if (bookIsbn) bookIsbn.value = isbn;
+
+    // 표지 이미지 설정
+    if (cover && elements.coverPreview) {
+        elements.coverPreview.innerHTML = `<img src="${cover}" alt="표지">`;
+        elements.coverPreview.classList.add('has-image');
+        elements.bookCoverData.value = cover;
+    }
+
+    // 검색 결과 숨기기
+    const searchResults = document.getElementById('bookSearchResults');
+    if (searchResults) searchResults.style.display = 'none';
+
+    showToast('책 정보를 불러왔습니다', 'success');
 }
 
 function saveBook(bookData) {
@@ -2256,15 +2367,37 @@ function bindEvents() {
         if (e.target === elements.bookModal) closeBookModal();
     });
 
+    // Book Search
+    const bookSearchBtn = document.getElementById('bookSearchBtn');
+    const bookSearchInput = document.getElementById('bookSearchInput');
+
+    if (bookSearchBtn) {
+        bookSearchBtn.addEventListener('click', () => {
+            const query = bookSearchInput?.value;
+            searchBooks(query);
+        });
+    }
+
+    if (bookSearchInput) {
+        bookSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBooks(bookSearchInput.value);
+            }
+        });
+    }
+
     elements.bookForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const bookIsbn = document.getElementById('bookIsbn');
         const bookData = {
             title: elements.bookTitle.value.trim(),
             author: elements.bookAuthor.value.trim(),
             status: elements.bookStatus.value,
             rating: parseInt(elements.bookRating.value) || 0,
             cover: elements.bookCoverData.value || null,
-            notes: elements.bookNotes.value.trim()
+            notes: elements.bookNotes.value.trim(),
+            isbn: bookIsbn?.value || null
         };
         if (!bookData.title) return;
         saveBook(bookData);

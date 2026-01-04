@@ -448,6 +448,23 @@
                 <form class="modal-form" id="bookForm">
                     <input type="hidden" id="bookId">
                     <input type="hidden" id="bookCoverData">
+                    <input type="hidden" id="bookIsbn">
+
+                    <!-- 책 검색 섹션 -->
+                    <div class="book-search-section">
+                        <div class="form-group">
+                            <label for="bookSearchInput">📚 책 검색</label>
+                            <div class="book-search-wrapper">
+                                <input type="text" id="bookSearchInput" placeholder="책 제목으로 검색하세요...">
+                                <button type="button" class="btn btn-primary btn-sm" id="bookSearchBtn">검색</button>
+                            </div>
+                        </div>
+                        <div class="book-search-results" id="bookSearchResults" style="display: none;">
+                            <!-- 검색 결과가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+
+                    <hr class="form-divider">
 
                     <div class="form-group">
                         <label>책 표지</label>
