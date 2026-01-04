@@ -189,6 +189,12 @@ const elements = {
     taskReminderDate: $('#taskReminderDate'),
     taskReminderTime: $('#taskReminderTime'),
 
+    // Task Count
+    taskTargetCount: $('#taskTargetCount'),
+    taskCurrentCount: $('#taskCurrentCount'),
+    countMinus: $('#countMinus'),
+    countPlus: $('#countPlus'),
+
     // Books
     booksView: $('#booksView'),
     booksGrid: $('#booksGrid'),
@@ -1557,6 +1563,10 @@ function generateTasksFromMandalart() {
     const subGoalCenters = [10, 13, 16, 37, 43, 64, 67, 70];
     const centralBlock = [30, 31, 32, 39, 41, 48, 49, 50];
 
+    // 올해 마지막 날 계산
+    const currentYear = new Date().getFullYear();
+    const yearEndDate = `${currentYear}-12-31`;
+
     // 블록별 실행 항목 매핑
     const blockActions = {
         0: [0, 1, 2, 9, 11, 18, 19, 20],      // 블록 0 (세부목표: index 10)
@@ -1604,14 +1614,15 @@ function generateTasksFromMandalart() {
                 title: actionContent,
                 description: `만다라트에서 생성된 태스크입니다.`,
                 priority: priorityMap[blockIdx] || 'medium',
-                dueDate: null,
+                dueDate: yearEndDate,      // 올해 마지막 날로 설정
                 status: 'todo',
                 quadrant: blockIdx <= 2 ? 'q1' : blockIdx <= 5 ? 'q2' : 'q3',
                 completed: false,
                 createdAt: Date.now(),
                 epic: mainGoal || '',      // 핵심 목표 = Epic
-                story: subGoal || ''       // 세부 목표 = Story
-                // Task = 실행 항목 (title)
+                story: subGoal || '',      // 세부 목표 = Story
+                targetCount: 1,            // 기본 목표 횟수
+                currentCount: 0            // 현재 진행 횟수
             };
 
             tasks.unshift(newTask);
@@ -1968,11 +1979,35 @@ function renderTaskCards(taskList, type, target = null) {
                             <span class="task-priority ${task.priority}">${PRIORITY_LABELS[task.priority]}</span>
                             ${dueHtml}
                         </div>
+                        ${renderTaskProgress(task)}
                     </div>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function renderTaskProgress(task) {
+    const target = task.targetCount || 1;
+    const current = task.currentCount || 0;
+
+    // 목표가 1회인 경우 진행률 표시 생략
+    if (target <= 1) return '';
+
+    const percent = Math.min(100, Math.round((current / target) * 100));
+    const isComplete = current >= target;
+
+    return `
+        <div class="task-progress">
+            <div class="task-progress-bar">
+                <div class="task-progress-fill ${isComplete ? 'complete' : ''}" style="width: ${percent}%"></div>
+            </div>
+            <div class="task-progress-text">
+                <span class="task-progress-count">${current}/${target}회</span>
+                <span>${percent}%</span>
+            </div>
+        </div>
+    `;
 }
 
 function updateStats() {
@@ -2056,11 +2091,15 @@ function openTaskModal(target, type, taskData = null) {
         elements.taskDueDate.value = taskData.dueDate || '';
         elements.taskReminderDate.value = taskData.reminderDate || '';
         elements.taskReminderTime.value = taskData.reminderTime || '09:00';
+        elements.taskTargetCount.value = taskData.targetCount || 1;
+        elements.taskCurrentCount.value = taskData.currentCount || 0;
     } else {
         elements.modalTitle.textContent = '새 태스크';
         elements.taskId.value = '';
         elements.taskForm.reset();
         elements.taskReminderTime.value = '09:00';
+        elements.taskTargetCount.value = 1;
+        elements.taskCurrentCount.value = 0;
     }
 
     elements.taskTarget.value = JSON.stringify({ target, type });
@@ -2283,14 +2322,25 @@ function handleFormSubmit(e) {
 
     const id = elements.taskId.value;
     const targetData = JSON.parse(elements.taskTarget.value);
+    const targetCount = parseInt(elements.taskTargetCount.value) || 1;
+    const currentCount = parseInt(elements.taskCurrentCount.value) || 0;
+
     const taskData = {
         title: elements.taskTitle.value.trim(),
         description: elements.taskDesc.value.trim(),
         priority: elements.taskPriority.value,
         dueDate: elements.taskDueDate.value || null,
         reminderDate: elements.taskReminderDate.value || null,
-        reminderTime: elements.taskReminderTime.value || null
+        reminderTime: elements.taskReminderTime.value || null,
+        targetCount: targetCount,
+        currentCount: currentCount
     };
+
+    // 목표 달성 시 자동 완료
+    if (currentCount >= targetCount && targetCount > 0) {
+        taskData.completed = true;
+        taskData.status = 'done';
+    }
 
     if (!taskData.title) return;
 
@@ -2705,6 +2755,22 @@ function bindEvents() {
     elements.taskForm.addEventListener('submit', handleFormSubmit);
     elements.taskModal.addEventListener('click', (e) => {
         if (e.target === elements.taskModal) closeTaskModal();
+    });
+
+    // Count Control
+    elements.countMinus?.addEventListener('click', () => {
+        const current = parseInt(elements.taskCurrentCount.value) || 0;
+        if (current > 0) {
+            elements.taskCurrentCount.value = current - 1;
+        }
+    });
+
+    elements.countPlus?.addEventListener('click', () => {
+        const current = parseInt(elements.taskCurrentCount.value) || 0;
+        const target = parseInt(elements.taskTargetCount.value) || 100;
+        if (current < target) {
+            elements.taskCurrentCount.value = current + 1;
+        }
     });
 
     // Delete Modal
