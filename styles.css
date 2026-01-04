@@ -2925,10 +2925,21 @@ body {
 
     .auth-section,
     .user-section {
-        display: flex !important;
         align-items: center !important;
         gap: 4px !important;
         margin: 0 !important;
+    }
+
+    /* JS에서 display 제어 가능하도록 !important 제거 */
+    .auth-section[style*="flex"] {
+        display: flex !important;
+    }
+    .user-section[style*="flex"] {
+        display: flex !important;
+    }
+    .auth-section[style*="none"],
+    .user-section[style*="none"] {
+        display: none !important;
     }
 
     .btn-sm {
