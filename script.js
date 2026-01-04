@@ -2402,10 +2402,18 @@ function updateAuthUI(isLoggedIn) {
     const userSection = document.getElementById('userSection');
     const userEmail = document.getElementById('userEmail');
 
-    alert('updateAuthUI: isLoggedIn=' + isLoggedIn + ', authSection=' + !!authSection + ', userSection=' + !!userSection);
+    // 디버그용 - 화면에 표시
+    let debugDiv = document.getElementById('debugInfo');
+    if (!debugDiv) {
+        debugDiv = document.createElement('div');
+        debugDiv.id = 'debugInfo';
+        debugDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:yellow;color:black;padding:10px;z-index:99999;font-size:12px;';
+        document.body.prepend(debugDiv);
+    }
+    debugDiv.innerHTML = 'DEBUG: isLoggedIn=' + isLoggedIn + ', authSection=' + !!authSection + ', userSection=' + !!userSection + ', currentUser=' + (currentUser?.email || 'null');
 
     if (!authSection || !userSection) {
-        alert('updateAuthUI 실패: DOM 요소를 찾을 수 없음');
+        debugDiv.innerHTML += '<br>ERROR: DOM 요소 없음!';
         return;
     }
 
@@ -2413,11 +2421,11 @@ function updateAuthUI(isLoggedIn) {
         authSection.style.display = 'none';
         userSection.style.display = 'flex';
         if (userEmail) userEmail.textContent = currentUser.email;
-        alert('로그인 상태로 UI 변경 완료');
+        debugDiv.innerHTML += '<br>로그인 UI 적용 완료!';
     } else {
         authSection.style.display = 'flex';
         userSection.style.display = 'none';
-        alert('로그아웃 상태로 UI 변경 완료');
+        debugDiv.innerHTML += '<br>로그아웃 UI 적용';
     }
 }
 
