@@ -1624,8 +1624,8 @@ function generateTasksFromMandalart() {
                 quadrant: blockIdx <= 2 ? 'q1' : blockIdx <= 5 ? 'q2' : 'q3',
                 completed: false,
                 createdAt: Date.now(),
-                epic: mainGoal || '',      // 핵심 목표 = Epic
-                story: subGoal || '',      // 세부 목표 = Story
+                epic: subGoal || '',       // 세부 목표 = Epic
+                story: '',                 // Story는 사용 안함 (실행 항목이 Task)
                 targetCount: 1,            // 기본 목표 횟수
                 currentCount: 0,           // 현재 진행 횟수
                 fromMandalart: true        // 만다라트에서 생성됨
