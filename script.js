@@ -21,16 +21,22 @@ let currentUser = null;
 // Supabase 초기화
 function initSupabase() {
     if (window.supabase) {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                persistSession: true,
-                storageKey: 'taskmaster-auth',
-                storage: window.localStorage,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
-            }
-        });
-        checkAuthState();
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: {
+                    persistSession: true,
+                    storageKey: 'taskmaster-auth',
+                    storage: window.localStorage,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
+            });
+            checkAuthState();
+        } catch (e) {
+            alert('Supabase 초기화 오류: ' + e.message);
+        }
+    } else {
+        alert('Supabase SDK 로드 실패');
     }
 }
 
@@ -2464,12 +2470,16 @@ async function handleAuthSubmit(e) {
         if (isSignUp && result.data.user && !result.data.session) {
             showAuthError('이메일을 확인해주세요!', 'success');
         } else {
-            console.log('Login successful:', result.data);
+            // 디버그용
+            alert('로그인 성공! 세션: ' + (result.data.session ? '있음' : '없음'));
 
             // 세션 직접 설정
             if (result.data.session) {
                 currentUser = result.data.session.user;
+                alert('UI 업데이트 시도: ' + currentUser.email);
                 updateAuthUI(true);
+            } else {
+                alert('세션이 없습니다!');
             }
 
             // 이메일 저장 체크박스 확인
@@ -2673,6 +2683,7 @@ function bindAuthEvents() {
 // 초기화
 // ============================================
 function init() {
+    alert('앱 시작!'); // 디버그
     initTheme();
     loadTasks();
     loadMandalart();
@@ -2682,6 +2693,7 @@ function init() {
     bindAuthEvents();
     startReminderChecker();
     initSupabase();
+    alert('초기화 완료!'); // 디버그
 }
 
 document.addEventListener('DOMContentLoaded', init);
