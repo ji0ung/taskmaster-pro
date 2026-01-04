@@ -2491,7 +2491,12 @@ async function handleAuthSubmit(e) {
             if (result.data.session) {
                 currentUser = result.data.session.user;
                 alert('UI 업데이트 시도: ' + currentUser.email);
-                updateAuthUI(true);
+                try {
+                    updateAuthUI(true);
+                    alert('updateAuthUI 완료!');
+                } catch (uiError) {
+                    alert('updateAuthUI 에러: ' + uiError.message);
+                }
             } else {
                 alert('세션이 없습니다!');
             }
