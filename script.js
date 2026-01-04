@@ -2397,13 +2397,27 @@ async function checkAuthState() {
 }
 
 function updateAuthUI(isLoggedIn) {
+    // DOM에서 직접 요소 찾기 (elements 객체가 null일 수 있음)
+    const authSection = document.getElementById('authSection');
+    const userSection = document.getElementById('userSection');
+    const userEmail = document.getElementById('userEmail');
+
+    alert('updateAuthUI: isLoggedIn=' + isLoggedIn + ', authSection=' + !!authSection + ', userSection=' + !!userSection);
+
+    if (!authSection || !userSection) {
+        alert('updateAuthUI 실패: DOM 요소를 찾을 수 없음');
+        return;
+    }
+
     if (isLoggedIn && currentUser) {
-        elements.authSection.style.display = 'none';
-        elements.userSection.style.display = 'flex';
-        elements.userEmail.textContent = currentUser.email;
+        authSection.style.display = 'none';
+        userSection.style.display = 'flex';
+        if (userEmail) userEmail.textContent = currentUser.email;
+        alert('로그인 상태로 UI 변경 완료');
     } else {
-        elements.authSection.style.display = 'flex';
-        elements.userSection.style.display = 'none';
+        authSection.style.display = 'flex';
+        userSection.style.display = 'none';
+        alert('로그아웃 상태로 UI 변경 완료');
     }
 }
 
@@ -2577,9 +2591,9 @@ async function saveToCloud() {
 }
 
 async function loadFromCloud() {
-    console.log('loadFromCloud 시작, currentUser:', currentUser?.id);
+    alert('loadFromCloud 시작, currentUser: ' + (currentUser?.id || 'null'));
     if (!supabaseClient || !currentUser) {
-        console.log('loadFromCloud 중단: supabaseClient 또는 currentUser 없음');
+        alert('loadFromCloud 중단: supabaseClient=' + !!supabaseClient + ', currentUser=' + !!currentUser);
         return;
     }
 
@@ -2590,18 +2604,14 @@ async function loadFromCloud() {
             .eq('user_id', currentUser.id)
             .single();
 
-        console.log('클라우드 데이터 조회 결과:', { data, error });
+        alert('클라우드 조회 완료: data=' + !!data + ', error=' + (error?.message || 'none'));
 
         if (error && error.code !== 'PGRST116') {
             throw error;
         }
 
         if (data) {
-            console.log('클라우드에서 데이터 발견:', {
-                tasks: data.tasks?.length || 0,
-                books: data.books?.length || 0,
-                mandalart: data.mandalart?.length || 0
-            });
+            alert('클라우드 데이터: tasks=' + (data.tasks?.length || 0) + ', books=' + (data.books?.length || 0));
 
             // 클라우드 데이터가 있으면 로드 (빈 배열도 허용)
             if (data.tasks && Array.isArray(data.tasks)) {
