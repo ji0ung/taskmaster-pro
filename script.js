@@ -246,6 +246,7 @@ let filterDue = 'all';
 // Calendar state
 let calendarDate = new Date();
 let selectedDate = null;
+let calendarMode = 'month'; // 'month' or 'timeline'
 
 // Mandal-Art state
 let mandalartData = createEmptyMandalart();
@@ -630,6 +631,12 @@ function switchView(view) {
         v.classList.toggle('active', v.id === `${view}View`);
     });
 
+    // 캘린더 뷰 진입 시 오늘 날짜 자동 선택
+    if (view === 'calendar' && !selectedDate) {
+        const today = new Date();
+        selectedDate = formatDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+    }
+
     deselectTask();
     render();
 }
@@ -913,6 +920,188 @@ function formatDateStr(year, month, day) {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
+}
+
+// ============================================
+// 타임라인 뷰
+// ============================================
+function renderTimeline() {
+    const timelineHours = document.querySelector('.timeline-hours');
+    const timelineGrid = document.getElementById('timelineGrid');
+    if (!timelineHours || !timelineGrid) return;
+
+    const currentHour = new Date().getHours();
+
+    // 시간 라벨 생성 (0시 ~ 23시)
+    let hoursHtml = '';
+    let gridHtml = '';
+
+    for (let hour = 0; hour < 24; hour++) {
+        const hourStr = hour.toString().padStart(2, '0') + ':00';
+        const isCurrentHour = hour === currentHour;
+
+        hoursHtml += `<div class="timeline-hour-label">${hourStr}</div>`;
+        gridHtml += `<div class="timeline-row ${isCurrentHour ? 'current-hour' : ''}" data-hour="${hour}"></div>`;
+    }
+
+    timelineHours.innerHTML = hoursHtml;
+    timelineGrid.innerHTML = gridHtml;
+
+    // 오늘 날짜의 태스크 가져오기
+    const today = selectedDate || formatDateStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    const dayTasks = tasks.filter(t => {
+        if (!t.createdAt) return false;
+        const created = new Date(t.createdAt);
+        const createdDateStr = formatDateStr(created.getFullYear(), created.getMonth(), created.getDate());
+        return createdDateStr === today;
+    });
+
+    if (dayTasks.length === 0) {
+        timelineGrid.innerHTML = `
+            <div class="timeline-empty">
+                <div class="timeline-empty-icon">📅</div>
+                <p>오늘 생성된 태스크가 없습니다</p>
+            </div>
+        `;
+        return;
+    }
+
+    // 태스크를 시간 슬롯에 배치
+    dayTasks.forEach((task, index) => {
+        // 태스크 생성 시간 기준으로 배치 (기본값: 9시부터)
+        const createdDate = new Date(task.createdAt);
+        const startHour = task.startHour !== undefined ? task.startHour : createdDate.getHours();
+        const duration = task.duration || 1; // 기본 1시간
+
+        const taskEl = document.createElement('div');
+        taskEl.className = `timeline-task priority-${task.priority}`;
+        taskEl.dataset.id = task.id;
+        taskEl.style.top = `${startHour * 60}px`;
+        taskEl.style.height = `${duration * 60 - 4}px`;
+
+        taskEl.innerHTML = `
+            <div class="timeline-task-title">${escapeHtml(task.title)}</div>
+            <div class="timeline-task-time">${startHour}:00 - ${startHour + duration}:00</div>
+            <div class="timeline-task-resize"></div>
+        `;
+
+        // 드래그 이벤트 설정
+        setupTimelineDrag(taskEl, task);
+
+        timelineGrid.appendChild(taskEl);
+    });
+
+    // 현재 시간으로 스크롤
+    const container = document.querySelector('.timeline-container');
+    if (container) {
+        container.scrollTop = Math.max(0, (currentHour - 2) * 60);
+    }
+}
+
+function setupTimelineDrag(taskEl, task) {
+    let isDragging = false;
+    let isResizing = false;
+    let startY = 0;
+    let startTop = 0;
+    let startHeight = 0;
+
+    const resizeHandle = taskEl.querySelector('.timeline-task-resize');
+
+    // 태스크 드래그 (시간 이동)
+    taskEl.addEventListener('mousedown', (e) => {
+        if (e.target === resizeHandle) return;
+        isDragging = true;
+        startY = e.clientY;
+        startTop = parseInt(taskEl.style.top) || 0;
+        taskEl.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+
+    // 리사이즈 핸들 드래그 (기간 조절)
+    resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startY = e.clientY;
+        startHeight = parseInt(taskEl.style.height) || 60;
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const deltaY = e.clientY - startY;
+            let newTop = startTop + deltaY;
+            // 시간 단위로 스냅 (15분 = 15px)
+            newTop = Math.round(newTop / 15) * 15;
+            newTop = Math.max(0, Math.min(newTop, 23 * 60));
+            taskEl.style.top = `${newTop}px`;
+        }
+
+        if (isResizing) {
+            const deltaY = e.clientY - startY;
+            let newHeight = startHeight + deltaY;
+            // 최소 30분, 최대 8시간
+            newHeight = Math.max(30, Math.min(newHeight, 8 * 60));
+            newHeight = Math.round(newHeight / 15) * 15;
+            taskEl.style.height = `${newHeight}px`;
+
+            // 시간 표시 업데이트
+            const startHour = Math.floor(parseInt(taskEl.style.top) / 60);
+            const duration = Math.ceil(newHeight / 60);
+            const timeEl = taskEl.querySelector('.timeline-task-time');
+            if (timeEl) {
+                timeEl.textContent = `${startHour}:00 - ${startHour + duration}:00`;
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            taskEl.style.cursor = 'grab';
+
+            // 태스크 시간 업데이트
+            const newStartHour = Math.floor(parseInt(taskEl.style.top) / 60);
+            updateTask(task.id, { startHour: newStartHour });
+        }
+
+        if (isResizing) {
+            isResizing = false;
+
+            // 태스크 기간 업데이트
+            const newDuration = Math.ceil(parseInt(taskEl.style.height) / 60);
+            updateTask(task.id, { duration: newDuration });
+        }
+    });
+
+    // 클릭으로 태스크 수정
+    taskEl.addEventListener('click', (e) => {
+        if (!isDragging && !isResizing) {
+            openTaskModal(task.status, 'status', task);
+        }
+    });
+}
+
+function switchCalendarMode(mode) {
+    calendarMode = mode;
+
+    const monthView = document.getElementById('calendarMonthView');
+    const timelineView = document.getElementById('calendarTimelineView');
+    const monthBtn = document.getElementById('monthModeBtn');
+    const timelineBtn = document.getElementById('timelineModeBtn');
+
+    if (mode === 'month') {
+        if (monthView) monthView.style.display = 'block';
+        if (timelineView) timelineView.style.display = 'none';
+        if (monthBtn) monthBtn.classList.add('active');
+        if (timelineBtn) timelineBtn.classList.remove('active');
+        renderCalendar();
+    } else {
+        if (monthView) monthView.style.display = 'none';
+        if (timelineView) timelineView.style.display = 'block';
+        if (monthBtn) monthBtn.classList.remove('active');
+        if (timelineBtn) timelineBtn.classList.add('active');
+        renderTimeline();
+    }
 }
 
 function renderMandalart() {
@@ -2317,6 +2506,12 @@ function bindEvents() {
     elements.prevMonth.addEventListener('click', handlePrevMonth);
     elements.nextMonth.addEventListener('click', handleNextMonth);
     elements.todayBtn.addEventListener('click', handleTodayBtn);
+
+    // Calendar Mode Toggle
+    const monthModeBtn = document.getElementById('monthModeBtn');
+    const timelineModeBtn = document.getElementById('timelineModeBtn');
+    if (monthModeBtn) monthModeBtn.addEventListener('click', () => switchCalendarMode('month'));
+    if (timelineModeBtn) timelineModeBtn.addEventListener('click', () => switchCalendarMode('timeline'));
 
     // Empty State Click
     document.addEventListener('click', handleEmptyStateClick);
